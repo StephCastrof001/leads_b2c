@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py~
+
+# Virtual environments
+.env
+.venv
+env/
+ENV/
+venv/
+ENV/
+
+# Dependency directories
+node_modules/
+bower_components/
+
+# Build output directories
+build/
+bundle/
+out/
+
+# Testing and coverage
+*.log
+*.tmp
+*.seed
+*.sqlite
+*.db
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Project-specific
+*.key
+*.secret
+*.tokens
+
+# Session & secrets
+.env
+session.json
+output/

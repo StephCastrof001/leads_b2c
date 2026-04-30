@@ -1,0 +1,61 @@
+{
+  "base_url": "https://us-central1-mailerfind.cloudfunctions.net/mailerfindAPI",
+  "v1_base": "/v1/",
+  "total_endpoints": 83,
+  "auth_required": true,
+        "auth_header": "Authorization: Bearer {firebase_id_token}",
+        "categories": {
+        "auth": [
+      {
+        "
+        "method": "POST",
+        "path": "/v1/auth/",
+        "endpoint": "auth.login",
+        "description": "Login con email/password",
+        "params": {
+          "body": {
+            "email": "string - usuario",
+            "password": "string - contraseña requerimiento min 8 chars"
+          },
+          "response": {"uid": "string", "email": "string", "userIdToken": "string JWT"}
+        },
+        "priority": 1,
+        "tier": "MVP"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/auth/google",
+        "endpoint": "auth.google-oauth",
+        "description": "Login OAuth Google",
+        "response": {"uid": "string", "email": "string", "userIdToken": "string JWT"},
+        "priority": 1,
+        "tier": "MVP"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/auth/facebook",
+        "endpoint": "auth.facebook-oauth",
+        "description": "Login OAuth Facebook",
+        "response": {"uid": "string", "email": "string", "userIdToken": "string JWT"},
+        "priority": 2,
+        "tier": "MVP"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/auth/microsoft/connect",
+        "endpoint": "auth.microsoft-oauth",
+        "description": "Login OAuth Microsoft",
+        "response": {"uid": "string", "email": "string", "userIdToken": "string JWT"},
+        "priority": 2,
+        "tier": "MVP"
+      },
+      {
+        "method": "POST",
+        "path": "/v1/auth/microsoft/disconnect",
+        "endpoint": "auth.microsoft-disconnect",
+        "description": "Logout Microsoft",
+        "response": {"status": "string"},
+        "priority": 3,
+        "tier": "MVP"
+      },
+    ],

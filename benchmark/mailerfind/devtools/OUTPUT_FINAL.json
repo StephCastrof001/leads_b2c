@@ -1,0 +1,374 @@
+{
+  "timestamp": "2026-04-27T21:00:00Z",
+  "user": {
+    "uid": "3mKns0kgXpTzepXF2T7a18PMT233",
+    "email": "steph@colega.lat",
+    "plan": "free",
+    "stripe_id": "cus_UPQWtJlyFN2Ol0",
+    "stripe_subscription_id": "sub_1TQbftGYwHFEIfB6rZ78nN9E",
+    "ai_credits_balance": 50,
+    "ai_credits_total_purchased": 0,
+    "email_sender_today": 2,
+    "firebase_auth": {
+      "provider": "password",
+      "id_token_valid": true
+    }
+  },
+  "wizard": {
+    "analysis_id": "SpMkSYd5y0VwkIOO6ivL",
+    "mode": "followers",
+    "target_user": {
+      "username": "qr.eterno",
+      "pk": "44991294991",
+      "full_name": "QR Eterno",
+      "follower_count": 7,
+      "following_count": 1,
+      "is_verified": false,
+      "is_private": false,
+      "source_type": "instagram"
+    },
+    "completed": true,
+    "current_step": 6,
+    "related_accounts_count": 10,
+    "generated_emails_count": 3,
+    "business_analysis": {
+      "name": "Colega.ia",
+      "industry": "Educación / Tecnología Educativa",
+      "target_audience": "Docentes de educación inicial, primaria y secundaria que buscan simplificar y optimizar su planificación curricular a través de herramientas digitales que les ayuden a generar sesiones de aprendizaje alineadas al CNEB.",
+      "description": "Colega.ia es una plataforma web que utiliza inteligencia artificial para ayudar a los docentes a crear Sesiones de Aprendizaje alineadas al Currículo Nacional de Educación Básica (CNEB) del Perú. Ofrece herramientas",
+      "generated_at": "2026-04-27T23:00:33Z"
+    }
+  },
+  "related_accounts": [
+    {
+      "uid": 7026947479,
+      "username": "jugandoaprendohablar",
+      "full_name": "Marlyng | Terapia de Lenguaje",
+      "bio": "Ayudo a niños con retos en el habla y lenguaje 🗣️💛  \nEvaluación + terapia personalizada \n📩 Escríbeme \"HABLA\" para más info",
+      "bio_clean": "Ayudo a niños con retos en el habla y lenguaje \nEvaluación + terapia personalizada \nEscribeme HABLA para mas info",
+      "followers": 99571,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/7026947479.jpg",
+      "relevance": "Los seguidores son padres y educadores interesados en mejorar la comunicación y el aprendizaje de los niños."
+    },
+    {
+      "uid": 1952676522,
+      "username": "emprendelibre",
+      "full_name": "EMPRENDE LIBRE",
+      "bio": "Educacio_n📚\nCrecimiento📈\n\"Cambia tu mente, Cambia tu mundo\".\nContacto📥",
+      "followers": 97825,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/1952676522.jpg",
+      "relevance": "Los seguidores son emprendedores y educadores que buscan herramientas y recursos para mejorar su práctica."
+    },
+    {
+      "uid": 7521336617,
+      "username": "ingles.con.vira",
+      "full_name": "PRONUNCIATION LOVER, LICENSED ENGLISH TEACHER",
+      "bio": "👩🏻‍🏫 Docente de inglés Licenciada desde 2013\n📌Te haré hablar🗣️ inglés con confianza\n👇Reserva la clase de prueba - y te ayudaré a potenciar tu inglés",
+      "followers": 97893,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/7521336617.jpg",
+      "relevance": "Los seguidores son docentes de inglés y estudiantes que buscan mejorar su enseñanza y aprendizaje."
+    },
+    {
+      "uid": 710168505,
+      "username": "tedu.ai",
+      "full_name": "TEDU | INTELIGENCIA ARTIFICIAL",
+      "bio": "📚 Potenciamos el aprendizaje con inteligencia.",
+      "followers": 98436,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/710168505.jpg",
+      "relevance": "Los seguidores son educadores y profesionales interesados en la integración de la tecnología en la educación."
+    },
+    {
+      "uid": 37025568398,
+      "username": "powermath89",
+      "full_name": "Power Math | Profe de Mate",
+      "bio": "¡Las matemáticas nunca fueron tan divertidas!😎",
+      "followers": 80664,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/37025568398.jpg",
+      "relevance": "Los seguidores son estudiantes y docentes de matemáticas que buscan recursos y apoyo en su enseñanza."
+    },
+    {
+      "uid": 1721815380,
+      "username": "ivangrank",
+      "full_name": "Iván Sánchez",
+      "bio": "📚Profe con tiza, memes y café\n📺+👨🏻‍🏫= curriculum peculiar pero sólido",
+      "followers": 96873,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/1721815380.jpg",
+      "relevance": "Los seguidores son docentes que buscan contenido educativo y recursos para mejorar su práctica."
+    },
+    {
+      "uid": 40319698,
+      "username": "betsytenay",
+      "full_name": "Betsy Tenango ✨|English Hacker",
+      "bio": "🚀Creando empresas que transforman vidas \n🤓Co-Founder @conversationhackers \n💰Sales y Marketing Pro",
+      "followers": 92513,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/40319698.jpg",
+      "relevance": "Los seguidores son emprendedores y educadores interesados en el crecimiento personal y profesional."
+    },
+    {
+      "uid": 662760127,
+      "username": "maruccipr",
+      "full_name": "MARUCCI",
+      "bio": "INFO 👇🏽 BOOKING / COLLABS",
+      "followers": 97513,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/662760127.jpg",
+      "relevance": "Los seguidores son profesionales que buscan colaboración y oportunidades en el ámbito educativo."
+    },
+    {
+      "uid": 47337395180,
+      "username": "ferfelixbio",
+      "full_name": "Fer Félix | Bióloga | Studygrammer",
+      "bio": "Bióloga estudiando la maestria en ciencias biológicas 🧫👩‍🔬🧬🐋",
+      "followers": 93351,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/47337395180.jpg",
+      "relevance": "Los seguidores son estudiantes y docentes interesados en biología y ciencias, buscando recursos educativos."
+    },
+    {
+      "uid": 10378075376,
+      "username": "musicflowmarketing",
+      "full_name": "Music Flow | Marketing Tips",
+      "bio": "🚀 | Inspirándote al éxito\n🧠 | Tu mente es tu palacio \n📝 | Comparte mis frases \n#MarketingConRitmo #marketingtips",
+      "followers": 73833,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/10378075376.jpg",
+      "relevance": "Los seguidores son profesionales del marketing y educación que buscan inspiración y herramientas para mejorar su práctica."
+    }
+  ],
+  "generated_emails": [
+    {
+      "id": 1,
+      "subject": "Plantilla rápida para sesiones CNEB",
+      "body": "<p>Hola {{ first_name }}, vi tu perfil {{ username }} en Instagram y por eso me animé a escribirte.</p><p>Estoy armando un recurso breve para docentes: una plantilla de Sesión de Aprendizaje ya ordenada según el CNEB (con un ejemplo listo para editar).</p><p>Si te sirve, te la envío por aquí. ¿La quieres?</p><p>Responde a este correo y te cuento más.</p>"
+    },
+    {
+      "id": 2,
+      "subject": "Checklist CNEB (1 página) para planificar más rápido",
+      "body": "<p>Hola {{ first_name }}, te encontré por Instagram ({{ username }}) y pensé que esto podría ayudarte.</p><p>Tengo un checklist de 1 página para revisar que una sesión quede alineada al CNEB sin perder tiempo (antes de imprimir o subirla).</p><p>Si quieres, te lo comparto. ¿Para qué nivel enseñas: inicial, primaria o secundaria?</p>"
+    }
+  ],
+  "pricing_plans": [
+    {
+      "id": "starter",
+      "name": "Starter",
+      "description": "Perfect for small businesses and freelancers",
+      "popular": false,
+      "has_trial": true,
+      "monthly_price_eur": 97,
+      "yearly_price_eur": 1164,
+      "monthly_price_usd": 97,
+      "limits": {
+        "credits": 10000,
+        "profiles_per_analysis": 2500,
+        "sender_accounts": 10,
+        "campaigns": 6,
+        "inbox_enabled": 5,
+        "lists": 3,
+        "influencer_finder_results": 50,
+        "emails_per_month": 4000,
+        "email_sequences": 5
+      },
+      "addons_available": {
+        "speed_boost": false,
+        "analysis_queue": false,
+        "parallel_analysis": false
+      }
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise",
+      "description": "For growing teams with advanced needs",
+      "popular": true,
+      "has_trial": true,
+      "monthly_price_eur": 297,
+      "yearly_price_eur": 3564,
+      "limits": {
+        "credits": 40000,
+        "profiles_per_analysis": 10000,
+        "sender_accounts": 30,
+        "campaigns": 12,
+        "inbox_enabled": 15,
+        "lists": 6,
+        "influencer_finder_results": 250,
+        "emails_per_month": 10000,
+        "email_sequences": 10
+      },
+      "addons_available": {
+        "speed_boost": false,
+        "analysis_queue": true,
+        "parallel_analysis": false
+      }
+    },
+    {
+      "id": "unlimited",
+      "name": "Unlimited",
+      "description": "For agencies and power users",
+      "popular": false,
+      "has_trial": true,
+      "has_custom_support": true,
+      "monthly_price_eur": 997,
+      "yearly_price_eur": 11964,
+      "limits": {
+        "credits": -1,
+        "sender_accounts": -1,
+        "influencer_finder_results": 500,
+        "emails_per_month": -1
+      },
+      "addons_available": {
+        "speed_boost": true,
+        "analysis_queue": true,
+        "parallel_analysis": true
+      }
+    }
+  ],
+  "mailboxes_types": [
+    {
+      "id": "google",
+      "type": "google",
+      "name": "Google Workspace",
+      "provider": "inboxkit",
+      "delivery_time_hours": 1,
+      "delivery_rate": 99,
+      "pricing": {
+        "domain_price": 10,
+        "mailbox_price": 4.99,
+        "currency": "EUR"
+      }
+    },
+    {
+      "id": "microsoft",
+      "type": "microsoft",
+      "name": "Microsoft 365",
+      "provider": "inboxkit",
+      "delivery_time_hours": 1,
+      "delivery_rate": 99,
+      "pricing": {
+        "domain_price": 10,
+        "mailbox_price": 4.99,
+        "currency": "EUR"
+      }
+    },
+    {
+      "id": "azure",
+      "type": "azure",
+      "name": "Azure Enterprise",
+      "provider": "inboxkit",
+      "delivery_time_hours": 1,
+      "delivery_rate": 99,
+      "pricing": {
+        "domain_price": 10,
+        "mailbox_price": 31,
+        "currency": "EUR"
+      }
+    }
+  ],
+  "instagram_profiles": [
+    {
+      "username": "clinicavesaliooficial",
+      "pk": "48261234571",
+      "full_name": "Clínica Vesalio",
+      "follower_count": 2177,
+      "following_count": 12,
+      "is_verified": false,
+      "is_private": false,
+      "biography": "Contamos con más de 30 especialidades disponibles para el cuidado de tu salud a cargo de profesionales de primer nivel."
+    },
+    {
+      "username": "qr.eterno",
+      "pk": "44991294991",
+      "full_name": "QR Eterno",
+      "follower_count": 7,
+      "following_count": 1,
+      "is_verified": false,
+      "is_private": false,
+      "biography": "Su historia, viva para siempre."
+    }
+  ],
+  "stripe": {
+    "customer_id": "cus_UPQWtJlyFN2Ol0",
+    "subscription_id": "sub_1TQbftGYwHFEIfB6rZ78nN9E",
+    "plan_id": "price_1S81XpGYwHFEIfB6cDIvFLF7",
+    "plan_name": "mailerfind_free_01",
+    "amount": 0,
+    "currency": "eur",
+    "interval": "month",
+    "status": "active"
+  },
+  "public_api_endpoints": [
+    "/v1/instagram/search-hashtags",
+    "/v1/instagram/search-places",
+    "/v1/instagram/search-users",
+    "/v1/instagram/user/{username}",
+    "/v1/analysis/test",
+    "/v1/pricing/plans",
+    "/v1/mailboxes/types",
+    "/v1/stripe/get-my-subscription"
+  ],
+  "metadata": {
+    "analysis_id": "SpMkSYd5y0VwkIOO6ivL",
+    "analysis_name": "Seguidores de @qr.eterno",
+    "analysis_mode": "followers",
+    "analysis_status": "COMPLETED",
+    "analysis_created_at": "2026-04-27T22:46:58Z",
+    "analysis_completed_at": "2026-04-27T22:47:39Z",
+    "selected_item": {
+      "pk": "44991294991",
+      "username": "qr.eterno",
+      "full_name": "QR Eterno",
+      "follower_count": 7,
+      "source_type": "instagram",
+      "mode": "followers"
+    },
+    "analysis_stats": {
+      "prospects_count": 7,
+      "public_accounts_count": 1,
+      "private_accounts_count": 6,
+      "emails_found_count": 0,
+      "websites_found_count": 0,
+      "phone_numbers_found_count": 0,
+      "source_type": "instagram"
+    },
+    "scheduling_info": {
+      "speed": "fast",
+      "batch_delay_ms": 15000,
+      "network_multiplier": 1
+    }
+  }
+}

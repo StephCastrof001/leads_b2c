@@ -1,0 +1,367 @@
+{
+  "metadata": {
+    "timestamp": "2026-04-27T16:20:28Z",
+    "test_account": "clinicavesaliooficial",
+    "target_pk": "48261234571",
+    "execution_time_ms": 2000,
+    "uid_source": "Firebase Dev Auth (steph@colega.lat)"
+  },
+  
+  "user_authentication": {
+    "email": "steph@colega.lat",
+    "uid": "3mKns0kgXpTzepXF2T7a18PMT233",
+    "token_prefix": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9. ..",
+    "provider": "email/password",
+    "auth_success": true
+  },
+  
+  "user_document": {
+    "plan": "free",
+    "ai_credits": {
+      "balance": 50,
+      "total_used": 50,
+      "total_purchased": 0,
+      "monthly_allocation": 0
+    },
+    "email_sender": {
+      "requests_today": 2,
+      "limits": {
+        "daily": 2,
+        "monthly": 60
+      }
+    },
+    "stripe_id": "cus_UPQWtJlyFN2Ol0",
+    "stripe_subscription_id": "sub_1TQbftGYwHFEIfB6rZ78nN9E",
+    "firebase_auth": {
+      "created_at": "2024-01-15T10:30:00Z",
+      "last_login": "2026-04-27T16:15:00Z"
+    }
+  },
+  
+  "wizard_data": {
+    "analysis_id": "SpMkSYd5y0VwkIOO6ivL",
+    "mode": "followers",
+    "selected_account": {
+      "pk": "48261234571",
+      "username": "clinicavesaliooficial",
+      "full_name": "Clínica Vesalio",
+      "follower_count": 2177,
+      "following_count": 12,
+      "is_verified": false,
+      "is_private": false,
+      "is_business": false,
+      "bio": "Contamos con más de 30 especialidades disponibles para el cuidado de tu salud a cargo de profesionales de primer nivel.",
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/profile_pictures/clinicavesaliooficial.jpg"
+    },
+    "completed": true,
+    "current_step": 6,
+    "related_accounts_count": 10,
+    "generated_emails_count": 3,
+    "business_analysis": {
+      "name": "Colega.ia",
+      "industry": "Educación / Tecnología Educativa",
+      "target_audience": "Docentes de educación inicial y primaria",
+      "description": "Colega.ia es una plataforma web que permite a los docentes crear recursos digitales basados en el CNEB (Currículo Nacional de Educación Básica)."
+    }
+  },
+  
+  "related_accounts_sample": [
+    {
+      "uid": "7026947479",
+      "username": "jugandoaprendohablar",
+      "full_name": "Marlyng | Terapia de Lenguaje",
+      "followers": 99571,
+      "following": null,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/7026947479.jpg",
+      "bio": "Ayudo a niños con retos en el habla y lenguaje 🗣️💛",
+      "relevance": "Los seguidores son padres y educadores interesados en mejorar la comunicación y el aprendizaje de los niños.",
+      "source_type": "instagram"
+    },
+    {
+      "uid": "1952676522",
+      "username": "emprendelibre",
+      "followers": 97825,
+      "following": null,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/1952676522.jpg",
+      "bio": "Emprende libre | Guía paso a paso",
+      "relevance": "Seguidores interesados en desarrollo de negocios y emprendimiento.",
+      "source_type": "instagram"
+    },
+    {
+      "uid": "30713458",
+      "username": "rb12war",
+      "followers": 6398,
+      "following": 3762,
+      "is_verified": false,
+      "is_business": false,
+      "is_private": false,
+      "has_email": true,
+      "profile_pic_url": "https://storage.googleapis.com/mailerfind.appspot.com/influencer_finder_profile_pictures/30713458.jpg",
+      "bio": "Consultor digital | Tech trends",
+      "relevance": "Usuarios tech-savvy interested in digital transformation.",
+      "source_type": "instagram"
+    }
+  ],
+  
+  "generated_emails_sample": [
+    {
+      "id": "email_1",
+      "template": "Plantilla CNEB",
+      "subject": "Plantilla rápida para sesiones CNEB",
+      "body_preview": "<p>Hola {{ first_name }}, vi tu perfil {{ username }} en Instagram...</p>",
+      "variables": ["first_name", "username"],
+      "length_chars": 450
+    },
+    {
+      "id": "email_2",
+      "template": "Checklist CNEB",
+      "subject": "Checklist CNEB (1 página)",
+      "body_preview": "<p>Hola {{ first_name }}, te encontré por Instagram...</p>",
+      "variables": ["first_name", "username"],
+      "length_chars": 380
+    },
+    {
+      "id": "email_3",
+      "template": "Bonus Resource",
+      "subject": "Bonus: Recurso para docentes",
+      "body_preview": "<p>Hola {{ first_name }}, complementando lo anterior...</p>",
+      "variables": ["first_name", "username"],
+      "length_chars": 410
+    }
+  ],
+  
+  "network_scrape_results": {
+    "followers": {
+      "total": 2177,
+      "public": 1,
+      "private": 6,
+      "business": 0,
+      "emails_found": 0,
+      "engagement_rate": "2.1%",
+      "endpoint": "POST /v1/instagram/followers/48261234571",
+      "data_size_mb": 50
+    },
+    "following": {
+      "total": 12,
+      "public": 1,
+      "private": 11,
+      "business": 0,
+      "emails_found": 0,
+      "engagement_rate": "8.5%",
+      "endpoint": "POST /v1/instagram/following/48261234571",
+      "data_size_mb": 20,
+      "premium_feature": true
+    },
+    "commenters": {
+      "total": 23,
+      "public": 1,
+      "private": 22,
+      "business": 0,
+      "avg_followers": 1200,
+      "engagement_rate": "5.8%",
+      "endpoint": "POST /v1/instagram/commenters/48261234571",
+      "data_size_mb": 15
+    },
+    "hashtags": {
+      "top_tags": ["#educacion", "#terapia", "#salud", "#aprende"],
+      "users_by_tag": 182,
+      "engagement_rate": "3.2%",
+      "endpoint": "GET /v1/instagram/search-hashtags/terrapresal",
+      "data_size_mb": 30
+    },
+    "locations": {
+      "location_users": 47,
+      "top_cities": ["Lima", "Bogotá", "Madrid", "São Paulo"],
+      "engagement_rate": "4.1%",
+      "endpoint": "GET /v1/instagram/search-places/Lima",
+      "data_size_mb": 25
+    }
+  },
+  
+  "analysis_subcollection": {
+    "total_docs": 8,
+    "docs_sample": [
+      {
+        "analysis_id": "SpMkSYd5y0VwkIOO6ivL",
+        "name": "Seguidores de @qr.eterno",
+        "mode": "followers",
+        "status": "COMPLETED",
+        "isCloud": true,
+        "prospectsCount": 7,
+        "publicAccountsCount": 1,
+        "privateAccountsCount": 6,
+        "businessAccountsCount": 0,
+        "emailsFoundCount": 0,
+        "creditsUsed": 1,
+        "createdAt": { "_seconds": 1777245636, "_nanoseconds": 848000000 },
+        "completedAt": { "_seconds": 1777245633, "_nanoseconds": 848000000 }
+      }
+    ]
+  },
+  
+  "prospects_subcollection": {
+    "total_docs": 1,
+    "sample_doc": {
+      "pk": 30713458,
+      "username": "rb12war",
+      "full_name": ". ..",
+      "bio": ". ..",
+      "is_business": false,
+      "is_private": false,
+      "followers": 6398,
+      "following": 3762,
+      "profile_pic_url": ". ..",
+      "analysis": ["SpMkSYd5y0VwkIOO6ivL"],
+      "createdAt": { "_seconds": 1777245636, "_nanoseconds": 576000000 }
+    }
+  },
+  
+  "pricing_plans": [
+    {
+      "id": "free",
+      "name": "Free",
+      "monthly_eur": 0,
+      "monthly_usd": 0,
+      "yearly_eur": 0,
+      "ai_credits": 50,
+      "profiles_per_analysis": 10,
+      "related_accounts": 10,
+      "generated_emails": 3
+    },
+    {
+      "id": "starter",
+      "name": "Starter",
+      "monthly_eur": 97,
+      "monthly_usd": 97,
+      "yearly_eur": 1164,
+      "ai_credits": 10000,
+      "profiles_per_analysis": 2500,
+      "related_accounts": 10000,
+      "generated_emails": 100
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise",
+      "monthly_eur": 297,
+      "monthly_usd": null,
+      "yearly_eur": 3564,
+      "ai_credits": 40000,
+      "profiles_per_analysis": 10000,
+      "related_accounts": 50000,
+      "generated_emails": 500
+    },
+    {
+      "id": "unlimited",
+      "name": "Unlimited",
+      "monthly_eur": 997,
+      "monthly_usd": 497,
+      "yearly_eur": 11964,
+      "ai_credits": -1,
+      "profiles_per_analysis": -1,
+      "related_accounts": -1,
+      "generated_emails": -1
+    }
+  ],
+  
+  "mailboxes_api": [
+    {
+      "type": "google",
+      "provider": "InboxKit",
+      "domain_eur": 10,
+      "mailbox_eur": 4.99
+    },
+    {
+      "type": "microsoft",
+      "provider": "InboxKit",
+      "domain_eur": 10,
+      "mailbox_eur": 4.99
+    },
+    {
+      "type": "azure",
+      "provider": "InboxKit",
+      "domain_eur": 10,
+      "mailbox_eur": 31
+    }
+  ],
+  
+  "firestore_rules": {
+    "users_uid": {
+      "level": "Level 1",
+      "read": "auth.uid == userId",
+      "write": "auth.uid == userId"
+    },
+    "users_uid_analysis_analysisId": {
+      "level": "Level 2",
+      "read": "if true;",
+      "write": "if true;",
+      "misconfigured": true
+    },
+    "users_uid_prospects_prospectId": {
+      "level": "Level 3",
+      "read": "if true;",
+      "write": "if true;",
+      "misconfigured": true
+    }
+  },
+  
+  "public_endpoints": [
+    {
+      "path": "/v1/analysis/test",
+      "method": "GET",
+      "auth_required": false,
+      "response_sample": { "key": "value" }
+    },
+    {
+      "path": "/v1/pricing/plans",
+      "method": "GET",
+      "auth_required": false,
+      "response_sample": 4 plans
+    },
+    {
+      "path": "/v1/mailboxes/types",
+      "method": "GET",
+      "auth_required": false,
+      "response_sample": 3 mailbox types
+    },
+    {
+      "path": "/v1/instagram/search-hashtags",
+      "method": "GET",
+      "auth_required": false,
+      "response_sample": 100+ users
+    },
+    {
+      "path": "/v1/instagram/search-places",
+      "method": "GET",
+      "auth_required": false,
+      "response_sample": 50+ users
+    }
+  ],
+  
+  "roi_calculation": {
+    "execution_time_seconds": 2,
+    "related_accounts_count": 10,
+    "generated_emails_count": 3,
+    "analysis_docs_count": 8,
+    "prospects_docs_count": 1,
+    "total_data_mb": 150,
+    "estimated_prospects": 2100,
+    "estimated_emails": 6300,
+    "cost_per_execution": 1,
+    "roi_per_minute": 210
+  },
+  
+  "sample_exports": {
+    "followers_batch_sample": 10,
+    "hashtags_batch_sample": 182,
+    "locations_batch_sample": 47,
+    "related_accounts_sample": 3
+  }
+}
