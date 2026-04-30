@@ -6,7 +6,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyCLF2A2phVTJVChOcWq-lk6bOoY9hXUAGs',
+  apiKey: 'REDACTED_API_KEY_MAILERFIND',
   authDomain: 'mailerfind-dev.firebaseapp.com',
   projectId: 'mailerfind',
   storageBucket: 'mailerfind.appspot.com',
