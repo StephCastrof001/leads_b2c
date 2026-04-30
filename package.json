@@ -1,6 +1,13 @@
 {
+  "type": "commonjs",
   "main": "firecrawl_stealth.js",
+  "scripts": {
+    "orchestrate": "node orchestrator.js",
+    "scrape": "node orchestrator.js",
+    "firecrawl:check": "node firecrawl_stealth.js"
+  },
   "dependencies": {
+    "@supabase/supabase-js": "^2.105.1",
     "firecrawl": "^4.20.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"
