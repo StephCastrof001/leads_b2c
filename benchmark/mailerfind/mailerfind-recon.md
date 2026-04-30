@@ -25,8 +25,8 @@
 | **Payments** | Stripe (Clover edition) | `js.stripe.com/clover/stripe.js` |
 
 ### Firebase Projects
-- **Prod**: `projectId: mailerfind` | `authDomain: mailerfind.firebaseapp.com` | `apiKey: AIzaSyD4C6xCWJmAiQPApDJGa6Gu73jS30Kzv_w`
-- **Dev**: `projectId: mailerfind-dev` | `authDomain: mailerfind-dev.firebaseapp.com` | `apiKey: AIzaSyCLF2A2phVTJVChOcWq-lk6bOoY9hXUAGs`
+- **Prod**: `projectId: mailerfind` | `authDomain: mailerfind.firebaseapp.com` | `apiKey: REDACTED_API_KEY`
+- **Dev**: `projectId: mailerfind-dev` | `authDomain: mailerfind-dev.firebaseapp.com` | `apiKey: REDACTED_API_KEY`
 
 ### Auth Flow
 ```

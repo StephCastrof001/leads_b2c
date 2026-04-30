@@ -1,7 +1,7 @@
 // 🧪 TEST: Analysis ID as UID
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCLF2A2phVTJVChOcWq-lk6bOoY9hXUAGs",
+  apiKey: "REDACTED_API_KEY",
   authDomain: "mailerfind-dev.firebaseapp.com",
   projectId: "mailerfind",
   storageBucket: "mailerfind.appspot.com",

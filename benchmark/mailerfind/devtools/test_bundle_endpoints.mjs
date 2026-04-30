@@ -34,7 +34,7 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, getDoc, collection, getDocs } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCLF2A2phVTJVChOcWq-lk6bOoY9hXUAGs",
+  apiKey: "REDACTED_API_KEY",
   authDomain: "mailerfind-dev.firebaseapp.com",
   projectId: "mailerfind",
   storageBucket: "mailerfind.appspot.com",
