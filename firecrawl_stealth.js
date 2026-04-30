@@ -1,30 +1,26 @@
-const firecrawl = require('firecrawl');
+const { FirecrawlApp, default: FirecrawlAppV1 } = require('firecrawl');
 const API_KEY = process.env.FIRECRAWL_API_KEY;
 
-const firecrawlClient = firecrawl(API_KEY);
+const firecrawlClient = new FirecrawlApp({ apiKey: API_KEY });
 
 async function enrichLeads(urls) {
   const results = [];
   
   for (const url of urls) {
     try {
-      const response = await firecrawlClient.crawl({
-        urls: [url],
+      const doc = await firecrawlClient.scrapeUrl(url, {
         selectors: {
           phone: /(\+\?0?[\d\s-\.]{6,20})/g,
           email: /(?<![\w.])([\w\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})(?![\w.])(?![\.\w])/g
         },
-        depth: 2,
-        includePaths: ['/contacto', '/about', '/terms', '/contact', '/contact-us', '/info'],
-        limit: 5
+        formId: 0
       });
 
-      const crawledData = await response.data;
-      console.log('Crawled:', url);
-      console.log('Data:', JSON.stringify(crawledData, null, 2));
-      results.push({ url, crawledData });
+      console.log('Scraped:', url);
+      console.log('Data:', JSON.stringify(doc, null, 2));
+      results.push({ url, data: doc });
     } catch (error) {
-      console.error('Error crawling', url, error);
+      console.error('Error scraping', url, error);
     }
   }
   
