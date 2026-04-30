@@ -1,26 +1,30 @@
-const { FirecrawlApp, default: FirecrawlAppV1 } = require('firecrawl');
-const API_KEY = process.env.FIRECRAWL_API_KEY;
+const { default: FirecrawlApp } = require('firecrawl');
+const fs = require('fs');
+const path = require('path');
 
-const firecrawlClient = new FirecrawlApp({ apiKey: API_KEY });
+// Load .env
+const envPath = path.join(__dirname, '.env');
+const envContent = fs.readFileSync(envPath, 'utf8');
+const apiKey = envContent.match(/FIRECRAWL_API_KEY=(.*)/)?.[1]?.trim() || null;
+
+const firecrawlClient = apiKey ? new FirecrawlApp({ apiKey }) : null;
 
 async function enrichLeads(urls) {
+  if (!firecrawlClient) {
+    console.log('Error: Firecrawl client not initialized');
+    return [];
+  }
+
   const results = [];
+  const v1 = firecrawlClient.v1;
   
   for (const url of urls) {
     try {
-      const doc = await firecrawlClient.scrapeUrl(url, {
-        selectors: {
-          phone: /(\+\?0?[\d\s-\.]{6,20})/g,
-          email: /(?<![\w.])([\w\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})(?![\w.])(?![\.\w])/g
-        },
-        formId: 0
-      });
-
-      console.log('Scraped:', url);
-      console.log('Data:', JSON.stringify(doc, null, 2));
+      const doc = await v1.scrapeUrl(url);
+      console.log('✅ Scrape:', url.slice(0, 100));
       results.push({ url, data: doc });
     } catch (error) {
-      console.error('Error scraping', url, error);
+      console.error('❌ Error:', url.slice(0, 50), error.message);
     }
   }
   
