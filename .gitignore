@@ -1,9 +1,7 @@
-node_modules/
+.env
 __pycache__/
 *.pyc
-.env
-session.json
-*.egg-info/
-.cache/
-.pytest_cache/
-venv/
+output/
+screenshots/
+api_map/
+.aider*
