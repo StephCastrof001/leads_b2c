@@ -20,6 +20,9 @@ SCREENSHOTS_DIR = Path(os.getenv("SCREENSHOTS_DIR", "recon/screenshots"))
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120"
 TIMEOUT = 30000  # 30s
 
+# Safe headers to keep in API endpoints
+SAFE_HEADERS = {"content-type", "accept", "user-agent", "accept-language", "accept-encoding"}
+
 
 class APIEndpoint:
     def __init__(self, method: str, url: str, headers: Dict, body: Any, 
@@ -35,6 +38,26 @@ class APIEndpoint:
 def log_message(level: str, module: str, message: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{timestamp}] [{level}] [{module}] {message}")
+
+
+def redact_sensitive_keys(data: Any) -> Any:
+    """Recursively redact sensitive keys in JSON data."""
+    if isinstance(data, dict):
+        return {k: redact_sensitive_keys(v) for k, v in data.items() 
+                if not any(sensitive in k.lower() for sensitive in ["password", "passwd", "token", "auth", "session", "secret", "cookie"])}
+    elif isinstance(data, list):
+        return [redact_sensitive_keys(item) for item in data]
+    else:
+        return data
+
+
+def redact_body(data: Any) -> Any:
+    """Redact sensitive keys and return simplified version."""
+    redacted = redact_sensitive_keys(data)
+    # If all keys were redacted, return a marker
+    if isinstance(redacted, dict) and len(redacted) == 0:
+        return "[REDACTED]"
+    return redacted
 
 
 async def setup_directories():
@@ -116,22 +139,34 @@ async def intercept_requests(context: BrowserContext, page: Page, endpoints: Lis
     
     def handle_request(request: Request):
         # Check if it's an API request
-        if '/api/' in request.url or '/v1/' in request.url or request.url.endswith('.fetch') or request.url.endswith('.xhr'):
+        if "/api/" in request.url or "/v1/" in request.url or request.resource_type in {"fetch", "xhr"}:
             log_message("DEBUG", "recon", f"Intercepted request: {request.method} {request.url}")
+            
+            # Filter headers to only safe keys
+            safe_headers = {k: v for k, v in dict(request.headers).items() if k.lower() in SAFE_HEADERS}
+            
+            # Store request body if available, with redaction
+            endpoint_body = None
+            if request.post_data:
+                try:
+                    # Try to parse as JSON
+                    import json
+                    parsed_body = json.loads(request.post_data)
+                    # Redact sensitive keys
+                    endpoint_body = redact_body(parsed_body)
+                except (json.JSONDecodeError, TypeError):
+                    # Not JSON, store raw data
+                    endpoint_body = request.post_data
             
             # Store the request details
             endpoint = APIEndpoint(
                 method=request.method,
                 url=request.url,
-                headers=dict(request.headers),
-                body=None,
+                headers=safe_headers,
+                body=endpoint_body,
                 response_status=0,
                 response_preview=""
             )
-            
-            # Store request body if available
-            if request.post_data:
-                endpoint.body = request.post_data
             
             # Store request
             endpoints.append(endpoint)
