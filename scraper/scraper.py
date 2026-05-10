@@ -40,7 +40,7 @@ class SocLeadsScraper:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
     async def login(self) -> bool:
-        """Login to SocLeads."""
+        """Login to SocLeads with up to 3 retry attempts."""
         self.log_message("INFO", "scraper", "Starting login...")
         
         if not self.browser:
@@ -57,42 +57,55 @@ class SocLeadsScraper:
                 self.context = await self.browser.chromium.new_context()
                 self.page = await self.context.new_page()
         
-        try:
-            await self.page.goto(SOCLEADS_BASE_URL, timeout=30000)
+        attempt_count = 0
+        max_attempts = 3
+        
+        while attempt_count < max_attempts:
+            attempt_count += 1
+            self.log_message("INFO", "scraper", f"Login attempt {attempt_count} of {max_attempts}")
             
-            # Wait for login form
-            await self.page.wait_for_selector('input[type="email"]', timeout=5000)
-            
-            # Fill credentials
-            email_input = self.page.locator('input[type="email"]')
-            password_input = self.page.locator('input[type="password"]')
-            
-            await email_input.fill(SOCLEADS_EMAIL)
-            await password_input.fill(SOCLEADS_PASSWORD)
-            
-            # Find and click login button
-            login_button = self.page.locator('button[type="submit"], button:has-text("Login"), button:has-text("Ingresar")')
-            await login_button.click()
-            
-            # Wait for successful login
-            await self.page.wait_for_timeout(2000)
-            
-            # Check if logged in
-            is_logged_in = await self.page.wait_for_selector(
-                'div:has-text("Dashboard"), div:has-text("Scraper"), div:has-text("History")',
-                timeout=5000
-            )
-            
-            if is_logged_in:
-                self.log_message("INFO", "scraper", "Login successful!")
-                return True
-            else:
-                self.log_message("WARN", "scraper", "Login might not be successful")
-                return False
+            try:
+                await self.page.goto(SOCLEADS_BASE_URL, timeout=30000)
                 
-        except Exception as e:
-            self.log_message("ERROR", "scraper", f"Login error: {e}")
-            return False
+                # Wait for login form
+                await self.page.wait_for_selector('input[type="email"]', timeout=5000)
+                
+                # Fill credentials
+                email_input = self.page.locator('input[type="email"]')
+                password_input = self.page.locator('input[type="password"]')
+                
+                await email_input.fill(SOCLEADS_EMAIL)
+                await password_input.fill(SOCLEADS_PASSWORD)
+                
+                # Find and click login button
+                login_button = self.page.locator('button[type="submit"], button:has-text("Login"), button:has-text("Ingresar")')
+                await login_button.click()
+                
+                # Wait for successful login
+                await self.page.wait_for_timeout(2000)
+                
+                # Check if logged in
+                is_logged_in = await self.page.wait_for_selector(
+                    'div:has-text("Dashboard"), div:has-text("Scraper"), div:has-text("History")',
+                    timeout=5000
+                )
+                
+                if is_logged_in:
+                    self.log_message("INFO", "scraper", "Login successful!")
+                    return True
+                else:
+                    self.log_message("WARN", "scraper", "Login might not be successful")
+                    return False
+                    
+            except Exception as e:
+                self.log_message("ERROR", "scraper", f"Login error on attempt {attempt_count}: {e}")
+                if attempt_count < max_attempts:
+                    await asyncio.sleep(2)
+                else:
+                    self.log_message("ERROR", "scraper", "Max login attempts reached")
+                    return False
+        
+        return False
     
     async def create_job(self, platform: Platform, keyword: str) -> ScrapeJob:
         """Create a new scrape job."""
