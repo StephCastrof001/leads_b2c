@@ -95,7 +95,7 @@ class SocLeadsScraper:
                     return True
                 else:
                     self.log_message("WARN", "scraper", "Login might not be successful")
-                    return False
+                    continue
                     
             except Exception as e:
                 self.log_message("ERROR", "scraper", f"Login error on attempt {attempt_count}: {e}")
