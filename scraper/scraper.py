@@ -62,6 +62,12 @@ class SocLeadsScraper:
                 
                 while attempt_count < max_attempts:
                     attempt_count += 1
+                    
+                    # Guard: Check if credentials are empty or None
+                    if not SOCLEADS_EMAIL or not SOCLEADS_PASSWORD:
+                        self.log_message("WARN", "scraper", f"Credentials missing (email: {SOCLEADS_EMAIL}, password: {SOCLEADS_PASSWORD})")
+                        return False
+                    
                     self.log_message("INFO", "scraper", f"Login attempt {attempt_count} of {max_attempts}")
                     
                     try:
@@ -96,15 +102,7 @@ class SocLeadsScraper:
                         else:
                             self.log_message("WARN", "scraper", "Login might not be successful")
                             continue
-                            
-                        attempt_count += 1
-                        
-                        if attempt_count < max_attempts:
-                            await asyncio.sleep(2)
-                        else:
-                            self.log_message("ERROR", "scraper", "Max login attempts reached")
-                            return False
-                        
+                    
                     except Exception as e:
                         self.log_message("ERROR", "scraper", f"Login error on attempt {attempt_count}: {e}")
                         attempt_count += 1
@@ -114,10 +112,9 @@ class SocLeadsScraper:
                         else:
                             self.log_message("ERROR", "scraper", "Max login attempts reached")
                             return False
-                
-                finally:
-                    if self.browser:
-                        await self.browser.stop()
+            finally:
+                if self.browser:
+                    await self.browser.stop()
         
         return False
     
