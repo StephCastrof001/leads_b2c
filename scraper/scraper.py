@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from playwright.async_api import async_playwright, BrowserContext, Page
+from playwright.async_api import async_playwright, BrowserContext, Page, PlaywrightTimeoutError
 
 from dotenv import load_dotenv
 from models import Lead, ScrapeJob, ScrapeResult, Platform, ScrapeStatus
@@ -103,6 +103,15 @@ class SocLeadsScraper:
                             self.log_message("WARN", "scraper", "Login might not be successful")
                             continue
                     
+                    except PlaywrightTimeoutError:
+                        self.log_message("WARN", "scraper", f"Login timeout on attempt {attempt_count}, retrying...")
+                        attempt_count += 1
+                        
+                        if attempt_count < max_attempts:
+                            await asyncio.sleep(2)
+                        else:
+                            self.log_message("ERROR", "scraper", "Max login attempts reached")
+                            return False
                     except Exception as e:
                         self.log_message("ERROR", "scraper", f"Login error on attempt {attempt_count}: {e}")
                         attempt_count += 1
@@ -193,6 +202,12 @@ class SocLeadsScraper:
             self.log_message("WARN", "scraper", f"Job timed out: {job.id}")
             return False
             
+        except PlaywrightTimeoutError:
+            job.status = ScrapeStatus.FAILED
+            job.completed_at = datetime.now()
+            job.error = "Playwright timeout"
+            self.log_message("WARN", "scraper", f"Job timeout: {job.id}")
+            return True
         except Exception as e:
             job.status = ScrapeStatus.FAILED
             job.completed_at = datetime.now()
@@ -229,6 +244,9 @@ class SocLeadsScraper:
             
             return ScrapeStatus.RUNNING
             
+        except PlaywrightTimeoutError:
+            self.log_message("WARN", "scraper", f"Status check timeout: {job.id}")
+            return ScrapeStatus.RUNNING
         except Exception:
             return ScrapeStatus.RUNNING
     
