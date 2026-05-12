@@ -320,30 +320,19 @@ class SocLeadsScraper:
         try:
             export_button = self.page.locator('button:has-text("Export all CSV")')
             await export_button.click()
-            await self.page.wait_for_timeout(2000)
             
-            # Wait for the file to be downloaded
-            await self.page.wait_for_timeout(3000)
+            # Use Playwright's expect_download to capture the download event
+            try:
+                async with self.page.expect_download(timeout=10000) as download_info:
+                    await self.page.wait_for_timeout(5000)
+                
+                download = await download_info.value
+                file_path = await download.path()
+            except PlaywrightTimeoutError:
+                self.log_message("ERROR", "scraper", f"Download event timeout: {job.id}")
+                raise
             
-            # Get the downloaded file content
-            file_path = await self.page.evaluate("""
-                () => {
-                    const file = document.querySelector('input[type="file"]');
-                    if (file && file.files[0]) {
-                        return file.files[0].path;
-                    }
-                    return null;
-                }
-            """)
-            
-            if not file_path:
-                # Try alternative: check downloads directory
-                self.log_message("WARN", "scraper", "File path not found, checking downloads...")
-                file_path = await self._get_downloaded_file_path()
-            
-            if not file_path:
-                self.log_message("ERROR", "scraper", "Could not find downloaded CSV file")
-                return False
+            self.log_message("INFO", "scraper", f"Downloaded file: {file_path}")
             
             # Parse the CSV file
             leads = await self._parse_csv_file(file_path, job)
@@ -364,23 +353,6 @@ class SocLeadsScraper:
         except Exception as e:
             self.log_message("ERROR", "scraper", f"Download error: {e}")
             return False
-    
-    async def _get_downloaded_file_path(self) -> Optional[str]:
-        """Get the path of the most recently downloaded file."""
-        try:
-            # Use Playwright's download event or check downloads directory
-            downloads_dir = await self.page.evaluate("""
-                () => {
-                    const downloads = window.downloads || [];
-                    if (downloads.length > 0) {
-                        return downloads[downloads.length - 1].path;
-                    }
-                    return null;
-                }
-            """)
-            return downloads_dir
-        except Exception:
-            return None
     
     async def _parse_csv_file(self, file_path: str, job: ScrapeJob) -> List[Lead]:
         """Parse the downloaded CSV file and return Lead objects."""
