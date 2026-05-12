@@ -58,6 +58,7 @@ class SocLeadsScraper:
             self.page = await self.context.new_page()
             
             try:
+                try:
                 attempt_count = 0
                 max_attempts = 3
                 
@@ -106,7 +107,6 @@ class SocLeadsScraper:
                     
                     except PlaywrightTimeoutError:
                         self.log_message("WARN", "scraper", f"Login timeout on attempt {attempt_count}, retrying...")
-                        attempt_count += 1
                         
                         if attempt_count < max_attempts:
                             await asyncio.sleep(2)
@@ -115,16 +115,21 @@ class SocLeadsScraper:
                             return False
                     except Exception as e:
                         self.log_message("ERROR", "scraper", f"Login error on attempt {attempt_count}: {e}")
-                        attempt_count += 1
                         
                         if attempt_count < max_attempts:
                             await asyncio.sleep(2)
                         else:
                             self.log_message("ERROR", "scraper", "Max login attempts reached")
                             return False
-            finally:
-                if self.browser:
-                    await self.browser.stop()
+                finally:
+                    if self.browser:
+                        await self.browser.stop()
+        
+        except Exception:
+            # Outer try-catch for browser setup
+            if self.browser:
+                await self.browser.stop()
+            return False
         
         return False
     
@@ -215,10 +220,6 @@ class SocLeadsScraper:
             job.error = str(e)
             self.log_message("ERROR", "scraper", f"Job error: {e}")
             return False
-        
-        finally:
-            if self.browser:
-                await self.browser.stop()
     
     async def _check_job_status(self, job: ScrapeJob) -> ScrapeStatus:
         """Check the status of a job by polling."""
