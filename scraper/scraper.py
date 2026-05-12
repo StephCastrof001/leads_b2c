@@ -59,8 +59,8 @@ class SocLeadsScraper:
             
             try:
                 try:
-                attempt_count = 0
-                max_attempts = 3
+                    attempt_count = 0
+                    max_attempts = 3
                 
                 while attempt_count < max_attempts:
                     attempt_count += 1
@@ -220,6 +220,14 @@ class SocLeadsScraper:
             job.error = str(e)
             self.log_message("ERROR", "scraper", f"Job error: {e}")
             return False
+        
+        # Cleanup browser
+        if self.playwright:
+            await self.playwright.stop()
+            self.playwright = None
+            self.browser = None
+            self.context = None
+            self.page = None
     
     async def _check_job_status(self, job: ScrapeJob) -> ScrapeStatus:
         """Check the status of a job by polling."""
@@ -300,10 +308,15 @@ class SocLeadsScraper:
         await self._save_results(result)
         
         # Cleanup browser
-        if self.browser:
-            await self.browser.stop()
+        if self.playwright:
+            await self.playwright.stop()
+            self.playwright = None
+            self.browser = None
+            self.context = None
+            self.page = None
         
         self.log_message("INFO", "scraper", "=== All jobs completed ===")
+        
         return result
     
     async def _save_results(self, result: ScrapeResult):
