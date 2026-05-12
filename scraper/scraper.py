@@ -1,10 +1,12 @@
 import asyncio
+import csv
+import io
 import json
 import os
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from playwright.async_api import async_playwright, BrowserContext, Page
+from playwright.async_api import async_playwright, BrowserContext, Page, Playwright, PlaywrightTimeoutError
 
 from dotenv import load_dotenv
 from models import Lead, ScrapeJob, ScrapeResult, Platform, ScrapeStatus
@@ -27,6 +29,7 @@ class SocLeadsScraper:
         self.context: Optional[BrowserContext] = None
         self.page: Optional[Page] = None
         self.browser: Optional[async_playwright] = None
+        self.playwright: Optional[Playwright] = None
         self.jobs: List[ScrapeJob] = []
         self.total_credits_used = 0
         self.running = False
@@ -40,13 +43,13 @@ class SocLeadsScraper:
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
     async def login(self) -> bool:
-        """Login to SocLeads."""
+        """Login to SocLeads with up to 3 retry attempts."""
         self.log_message("INFO", "scraper", "Starting login...")
         
-        if not self.browser:
-            async with async_playwright() as p:
-                self.browser = p
-                self.context = await self.browser.chromium.launch(
+        if not self.playwright:
+            try:
+                self.playwright = await async_playwright().start()
+                self.browser = await self.playwright.chromium.launch(
                     headless=True,
                     args=[
                         '--no-sandbox',
@@ -54,45 +57,85 @@ class SocLeadsScraper:
                         '--disable-dev-shm-usage',
                     ]
                 )
-                self.context = await self.browser.chromium.new_context()
+                self.context = await self.browser.new_context()
                 self.page = await self.context.new_page()
-        
-        try:
-            await self.page.goto(SOCLEADS_BASE_URL, timeout=30000)
-            
-            # Wait for login form
-            await self.page.wait_for_selector('input[type="email"]', timeout=5000)
-            
-            # Fill credentials
-            email_input = self.page.locator('input[type="email"]')
-            password_input = self.page.locator('input[type="password"]')
-            
-            await email_input.fill(SOCLEADS_EMAIL)
-            await password_input.fill(SOCLEADS_PASSWORD)
-            
-            # Find and click login button
-            login_button = self.page.locator('button[type="submit"], button:has-text("Login"), button:has-text("Ingresar")')
-            await login_button.click()
-            
-            # Wait for successful login
-            await self.page.wait_for_timeout(2000)
-            
-            # Check if logged in
-            is_logged_in = await self.page.wait_for_selector(
-                'div:has-text("Dashboard"), div:has-text("Scraper"), div:has-text("History")',
-                timeout=5000
-            )
-            
-            if is_logged_in:
-                self.log_message("INFO", "scraper", "Login successful!")
-                return True
-            else:
-                self.log_message("WARN", "scraper", "Login might not be successful")
-                return False
                 
-        except Exception as e:
-            self.log_message("ERROR", "scraper", f"Login error: {e}")
-            return False
+                try:
+                    attempt_count = 0
+                    max_attempts = 3
+                    
+                    while attempt_count < max_attempts:
+                        attempt_count += 1
+                        
+                        # Guard: Check if credentials are empty or None
+                        if not SOCLEADS_EMAIL or not SOCLEADS_PASSWORD:
+                            self.log_message("WARN", "scraper", f"Credentials missing (email: {SOCLEADS_EMAIL}, password: {SOCLEADS_PASSWORD})")
+                            return False
+                        
+                        self.log_message("INFO", "scraper", f"Login attempt {attempt_count} of {max_attempts}")
+                        
+                        try:
+                            await self.page.goto(SOCLEADS_BASE_URL, timeout=30000)
+                            
+                            # Wait for login form
+                            await self.page.wait_for_selector('input[type="email"]', timeout=5000)
+                            
+                            # Fill credentials
+                            email_input = self.page.locator('input[type="email"]')
+                            password_input = self.page.locator('input[type="password"]')
+                            
+                            await email_input.fill(SOCLEADS_EMAIL)
+                            await password_input.fill(SOCLEADS_PASSWORD)
+                            
+                            # Find and click login button
+                            login_button = self.page.locator('button[type="submit"], button:has-text("Login"), button:has-text("Ingresar")')
+                            await login_button.click()
+                            
+                            # Wait for successful login
+                            await self.page.wait_for_timeout(2000)
+                            
+                            # Check if logged in
+                            is_logged_in = await self.page.wait_for_selector(
+                                'div:has-text("Dashboard"), div:has-text("Scraper"), div:has-text("History")',
+                                timeout=5000
+                            )
+                            
+                            if is_logged_in:
+                                self.log_message("INFO", "scraper", "Login successful!")
+                                return True
+                            else:
+                                self.log_message("WARN", "scraper", "Login might not be successful")
+                                continue
+                        
+                        except PlaywrightTimeoutError:
+                            self.log_message("WARN", "scraper", f"Login timeout on attempt {attempt_count}, retrying...")
+                            
+                            if attempt_count < max_attempts:
+                                await asyncio.sleep(2)
+                            else:
+                                self.log_message("ERROR", "scraper", "Max login attempts reached")
+                                return False
+                        except Exception as e:
+                            self.log_message("ERROR", "scraper", f"Login error on attempt {attempt_count}: {e}")
+                            
+                            if attempt_count < max_attempts:
+                                await asyncio.sleep(2)
+                            else:
+                                self.log_message("ERROR", "scraper", "Max login attempts reached")
+                                return False
+                finally:
+                    if self.browser:
+                        await self.browser.stop()
+                
+                return True
+                
+            except Exception:
+                # Outer try-catch for browser setup
+                if self.browser:
+                    await self.browser.stop()
+                return False
+        
+        return False
     
     async def create_job(self, platform: Platform, keyword: str) -> ScrapeJob:
         """Create a new scrape job."""
@@ -115,52 +158,265 @@ class SocLeadsScraper:
         job.started_at = datetime.now()
         
         try:
-            # Navigate to scraper section
-            await self.page.goto(f"{SOCLEADS_BASE_URL}/scraper", timeout=30000)
+            # Navigate to the correct platform using sidebar link text
+            platform_link = self._get_platform_link_text(job.platform)
+            if not platform_link:
+                job.status = ScrapeStatus.FAILED
+                job.error = "Unknown platform"
+                self.log_message("ERROR", "scraper", f"Unknown platform: {job.platform}")
+                return False
+            
+            self.log_message("INFO", "scraper", f"Navigating to: {platform_link}")
+            await self.page.click(f"text={platform_link}", timeout=30000)
             await self.page.wait_for_load_state("networkidle", timeout=30000)
             
+            # Fill the "Enter keyword" input
+            keyword_input = self.page.locator('input[placeholder="Enter keyword"]')
+            await keyword_input.fill(job.keyword)
+            
+            # Fill the "How many results?" input with a number > 0
+            results_input = self.page.locator('input[placeholder="How many results?"]')
+            await results_input.fill("10")
+            
+            # Click the "Search" button
+            search_button = self.page.locator('button:has-text("Search")')
+            await search_button.click()
+            
+            self.log_message("INFO", "scraper", f"Job submitted: {job.id}")
+            
             # Wait for results
-            max_wait = 120  # 120 seconds
-            elapsed = 0
+            if await self.wait_for_job_completion(job):
+                job.status = ScrapeStatus.COMPLETED
+                job.completed_at = datetime.now()
+                self.log_message("INFO", "scraper", f"Job completed: {job.id}")
+            else:
+                job.status = ScrapeStatus.FAILED
+                job.completed_at = datetime.now()
+                job.error = "Timeout after 300s"
+                self.log_message("WARN", "scraper", f"Job timed out: {job.id}")
             
-            while elapsed < max_wait:
-                await self.page.wait_for_timeout(5000)  # Poll every 5s
-                elapsed += 5
-                
-                # Check job status (polling)
-                status = await self._check_job_status(job)
-                
-                if status == ScrapeStatus.COMPLETED:
-                    job.status = ScrapeStatus.COMPLETED
-                    job.completed_at = datetime.now()
-                    self.log_message("INFO", "scraper", f"Job completed: {job.id}")
-                    return True
-                elif status == ScrapeStatus.FAILED:
-                    job.status = ScrapeStatus.FAILED
-                    job.completed_at = datetime.now()
-                    self.log_message("ERROR", "scraper", f"Job failed: {job.id}")
-                    return False
-                
-                # Check credits
-                if self.total_credits_used >= MAX_CREDITS:
-                    job.status = ScrapeStatus.CANCELLED
-                    job.completed_at = datetime.now()
-                    self.log_message("WARN", "scraper", f"Max credits reached, cancelling: {job.id}")
-                    return True
+            # Download results if completed
+            if job.status == ScrapeStatus.COMPLETED:
+                await self.download_job_results(job)
             
-            # Timeout
+        except PlaywrightTimeoutError:
             job.status = ScrapeStatus.FAILED
             job.completed_at = datetime.now()
-            job.error = "Timeout after 120s"
-            self.log_message("WARN", "scraper", f"Job timed out: {job.id}")
-            return False
-            
+            job.error = "Playwright timeout"
+            self.log_message("WARN", "scraper", f"Job timeout: {job.id}")
+            return True
         except Exception as e:
             job.status = ScrapeStatus.FAILED
             job.completed_at = datetime.now()
             job.error = str(e)
             self.log_message("ERROR", "scraper", f"Job error: {e}")
             return False
+        
+        # Cleanup browser
+        if self.playwright:
+            await self.playwright.stop()
+            self.playwright = None
+            self.browser = None
+            self.context = None
+            self.page = None
+        
+        # Keep browser alive for subsequent jobs
+        if self.running:
+            return
+    
+    async def _get_platform_link_text(self, platform: Platform) -> str:
+        """Get the sidebar link text for a platform."""
+        platform_links = {
+            Platform.IG_KEYWORD: "Scrape Instagram Keyword",
+            Platform.FB_KEYWORD: "Scrape Facebook",
+            Platform.TIKTOK_KEYWORD: "Scrape TikTok keyword",
+        }
+        return platform_links.get(platform)
+    
+    async def wait_for_job_completion(self, job: ScrapeJob) -> bool:
+        """Wait for job to complete in the 'Scraping results' table.
+        
+        Navigates to 'Scraping results' sidebar link, polls the table every 10 seconds,
+        and returns True when a row containing the keyword has Status 'Completed'.
+        Returns False if Status is 'Failed' or after 300 seconds timeout.
+        """
+        self.log_message("INFO", "scraper", f"Waiting for job completion: {job.id}")
+        
+        # Navigate to "Scraping results" via sidebar link
+        platform_link = self._get_platform_link_text(job.platform)
+        if not platform_link:
+            self.log_message("ERROR", "scraper", f"Unknown platform: {job.platform}")
+            return False
+        
+        self.log_message("INFO", "scraper", f"Navigating to: {platform_link}")
+        await self.page.click(f"text={platform_link}", timeout=30000)
+        await self.page.wait_for_load_state("networkidle", timeout=30000)
+        
+        # Poll the table every 10 seconds
+        max_wait = 300  # 300 seconds
+        elapsed = 0
+        
+        while elapsed < max_wait:
+            await self.page.wait_for_timeout(10000)  # Poll every 10s
+            elapsed += 10
+            
+            # Check job status by looking for the keyword row
+            status = await self._check_job_row_status(job)
+            
+            if status == ScrapeStatus.COMPLETED:
+                self.log_message("INFO", "scraper", f"Job completed in table: {job.id}")
+                return True
+            elif status == ScrapeStatus.FAILED:
+                self.log_message("ERROR", "scraper", f"Job failed in table: {job.id}")
+                return False
+        
+        self.log_message("WARN", "scraper", f"Job timeout after {max_wait}s: {job.id}")
+        return False
+    
+    async def _check_job_row_status(self, job: ScrapeJob) -> ScrapeStatus:
+        """Check the status of a specific job row in the table."""
+        try:
+            # Search for the keyword in the table
+            keyword_selector = f"tr:has-text('{job.keyword}')"
+            rows = await self.page.query_selector_all(keyword_selector)
+            
+            if not rows:
+                self.log_message("WARN", "scraper", f"Keyword not found in table: {job.keyword}")
+                return ScrapeStatus.RUNNING
+            
+            # Check the status column for this row
+            for row in rows:
+                # Get all cells in the row
+                cells = await row.query_selector_all("td, th")
+                if len(cells) >= 5:
+                    # Check the Status column (typically 5th column)
+                    status_cell = await cells[4].text_content()
+                    
+                    if "Completed" in status_cell:
+                        return ScrapeStatus.COMPLETED
+                    elif "Failed" in status_cell:
+                        return ScrapeStatus.FAILED
+                    elif "Running" in status_cell:
+                        return ScrapeStatus.RUNNING
+            
+            return ScrapeStatus.RUNNING
+            
+        except PlaywrightTimeoutError:
+            self.log_message("WARN", "scraper", f"Row status check timeout: {job.id}")
+            return ScrapeStatus.RUNNING
+        except Exception as e:
+            self.log_message("ERROR", "scraper", f"Row status check error: {e}")
+            return ScrapeStatus.RUNNING
+    
+    async def download_job_results(self, job: ScrapeJob) -> bool:
+        """Download and parse the CSV results for a completed job.
+        
+        Clicks 'Export all CSV', parses the downloaded file, and populates job.leads.
+        Returns True if successful, False otherwise.
+        """
+        self.log_message("INFO", "scraper", f"Downloading results for job: {job.id}")
+        
+        # Click "Export all CSV" button
+        try:
+            export_button = self.page.locator('button:has-text("Export all CSV")')
+            await export_button.click()
+            await self.page.wait_for_timeout(2000)
+            
+            # Wait for the file to be downloaded
+            await self.page.wait_for_timeout(3000)
+            
+            # Get the downloaded file content
+            file_path = await self.page.evaluate("""
+                () => {
+                    const file = document.querySelector('input[type="file"]');
+                    if (file && file.files[0]) {
+                        return file.files[0].path;
+                    }
+                    return null;
+                }
+            """)
+            
+            if not file_path:
+                # Try alternative: check downloads directory
+                self.log_message("WARN", "scraper", "File path not found, checking downloads...")
+                file_path = await self._get_downloaded_file_path()
+            
+            if not file_path:
+                self.log_message("ERROR", "scraper", "Could not find downloaded CSV file")
+                return False
+            
+            # Parse the CSV file
+            leads = await self._parse_csv_file(file_path, job)
+            
+            if leads:
+                job.leads = leads
+                job.credits_used = len(job.leads)
+                self.log_message("INFO", "scraper", f"Downloaded {len(leads)} leads for job: {job.id}")
+                return True
+            else:
+                self.log_message("WARN", "scraper", f"CSV downloaded but no leads found for job: {job.id}")
+                job.leads = []
+                return True
+                
+        except PlaywrightTimeoutError:
+            self.log_message("ERROR", "scraper", f"Download timeout: {job.id}")
+            return False
+        except Exception as e:
+            self.log_message("ERROR", "scraper", f"Download error: {e}")
+            return False
+    
+    async def _get_downloaded_file_path(self) -> Optional[str]:
+        """Get the path of the most recently downloaded file."""
+        try:
+            # Use Playwright's download event or check downloads directory
+            downloads_dir = await self.page.evaluate("""
+                () => {
+                    const downloads = window.downloads || [];
+                    if (downloads.length > 0) {
+                        return downloads[downloads.length - 1].path;
+                    }
+                    return null;
+                }
+            """)
+            return downloads_dir
+        except Exception:
+            return None
+    
+    async def _parse_csv_file(self, file_path: str, job: ScrapeJob) -> List[Lead]:
+        """Parse the downloaded CSV file and return Lead objects."""
+        leads = []
+        
+        try:
+            # Read the file content
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Parse CSV
+            reader = csv.DictReader(io.StringIO(content))
+            
+            for row in reader:
+                # Extract fields (based on expected CSV columns)
+                email = row.get('email', '').strip()
+                name = row.get('name', row.get('full_name', '')).strip()
+                link = row.get('link', row.get('profile_url', '')).strip()
+                
+                # Only add if email is present
+                if email:
+                    lead = Lead(
+                        platform=job.platform,
+                        keyword=job.keyword,
+                        email=email,
+                        name=name,
+                        link=link,
+                        phone=''  # May be empty if not in CSV
+                    )
+                    leads.append(lead)
+            
+            return leads
+            
+        except Exception as e:
+            self.log_message("ERROR", "scraper", f"CSV parse error: {e}")
+            return leads
     
     async def _check_job_status(self, job: ScrapeJob) -> ScrapeStatus:
         """Check the status of a job by polling."""
@@ -187,6 +443,9 @@ class SocLeadsScraper:
             
             return ScrapeStatus.RUNNING
             
+        except PlaywrightTimeoutError:
+            self.log_message("WARN", "scraper", f"Status check timeout: {job.id}")
+            return ScrapeStatus.RUNNING
         except Exception:
             return ScrapeStatus.RUNNING
     
@@ -237,7 +496,16 @@ class SocLeadsScraper:
         # Save results
         await self._save_results(result)
         
+        # Cleanup browser
+        if self.playwright:
+            await self.playwright.stop()
+            self.playwright = None
+            self.browser = None
+            self.context = None
+            self.page = None
+        
         self.log_message("INFO", "scraper", "=== All jobs completed ===")
+        
         return result
     
     async def _save_results(self, result: ScrapeResult):
