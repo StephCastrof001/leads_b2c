@@ -33,6 +33,8 @@ class SocLeadsScraper:
         self.jobs: List[ScrapeJob] = []
         self.total_credits_used = 0
         self.running = False
+        self.traffic_data: List[Dict[str, Any]] = []
+        self.traffic_job_id: Optional[str] = None
         
     def log_message(self, level: str, module: str, message: str):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -158,6 +160,9 @@ class SocLeadsScraper:
         job.started_at = datetime.now()
         
         try:
+            # Start traffic capture
+            await self._start_traffic_capture(job.id)
+            
             # Navigate to the correct platform using sidebar link text
             platform_link = self._get_platform_link_text(job.platform)
             if not platform_link:
@@ -211,6 +216,9 @@ class SocLeadsScraper:
             job.error = str(e)
             self.log_message("ERROR", "scraper", f"Job error: {e}")
             return False
+        
+        # Stop traffic capture
+        await self._stop_traffic_capture()
         
         # Cleanup browser
         if self.playwright:
@@ -389,6 +397,94 @@ class SocLeadsScraper:
         except Exception as e:
             self.log_message("ERROR", "scraper", f"CSV parse error: {e}")
             return leads
+    
+    async def _start_traffic_capture(self, job_id: str) -> None:
+        """Start capturing network traffic for a specific job."""
+        self.log_message("INFO", "scraper", f"Starting traffic capture for job: {job_id}")
+        self.traffic_job_id = job_id
+        self.traffic_data = []
+        
+        # Set up request listener
+        async def handle_request(request):
+            try:
+                # Skip static assets
+                if request.url.endswith(('.js', '.css', '.png', '.jpg', '.svg', '.woff', '.woff2', '.ttf', '.eot')):
+                    return
+                
+                # Capture request
+                self.traffic_data.append({
+                    "ts": datetime.now().isoformat(),
+                    "type": "request",
+                    "url": request.url,
+                    "method": request.method,
+                    "headers": dict(request.headers),
+                    "status": None,
+                    "body": None
+                })
+            except Exception as e:
+                self.log_message("WARN", "scraper", f"Request handler error: {e}")
+        
+        # Set up response listener
+        async def handle_response(response):
+            try:
+                # Find matching request
+                request_data = None
+                for data in self.traffic_data:
+                    if data["type"] == "request" and data["url"] == response.url():
+                        request_data = data
+                        break
+                
+                if request_data:
+                    # Capture response
+                    request_data["status"] = response.status()
+                    request_data["body"] = await response.text()
+                    
+                    # Ensure JSON body is properly formatted
+                    if request_data["body"]:
+                        content_type = response.headers.get("content-type", "")
+                        if "application/json" in content_type:
+                            try:
+                                import json
+                                request_data["body"] = json.dumps(json.loads(request_data["body"]), indent=2)
+                            except (json.JSONDecodeError, TypeError):
+                                pass
+            except Exception as e:
+                self.log_message("WARN", "scraper", f"Response handler error: {e}")
+        
+        # Attach listeners
+        try:
+            await self.page.on("request", handle_request)
+            await self.page.on("response", handle_response)
+            self.log_message("INFO", "scraper", f"Traffic capture started for job: {job_id}")
+        except Exception as e:
+            self.log_message("ERROR", "scraper", f"Failed to attach traffic listeners: {e}")
+    
+    async def _stop_traffic_capture(self) -> None:
+        """Stop traffic capture and save to file."""
+        if not self.traffic_job_id:
+            self.log_message("INFO", "scraper", "No active traffic capture to stop")
+            return
+        
+        self.log_message("INFO", "scraper", f"Stopping traffic capture for job: {self.traffic_job_id}")
+        
+        try:
+            # Remove listeners
+            await self.page.off("request", lambda r: None)
+            await self.page.off("response", lambda r: None)
+            
+            # Save to file
+            output_path = f"/tmp/socleads_traffic_{self.traffic_job_id}.json"
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(self.traffic_data, f, indent=2, default=str)
+            
+            self.log_message("INFO", "scraper", f"Traffic saved to: {output_path}")
+            self.log_message("INFO", "scraper", f"Total traffic entries: {len(self.traffic_data)}")
+            
+        except Exception as e:
+            self.log_message("ERROR", "scraper", f"Failed to save traffic data: {e}")
+        
+        self.traffic_job_id = None
+        self.traffic_data = []
     
     async def _check_job_status(self, job: ScrapeJob) -> ScrapeStatus:
         """Check the status of a job by polling."""
