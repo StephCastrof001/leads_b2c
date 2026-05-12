@@ -154,23 +154,31 @@ class SocLeadsScraper:
         job.started_at = datetime.now()
         
         try:
-            # Navigate to scraper section
-            await self.page.goto(f"{SOCLEADS_BASE_URL}/scraper", timeout=30000)
+            # Navigate to the correct platform using sidebar link text
+            platform_link = self._get_platform_link_text(job.platform)
+            if not platform_link:
+                job.status = ScrapeStatus.FAILED
+                job.error = "Unknown platform"
+                self.log_message("ERROR", "scraper", f"Unknown platform: {job.platform}")
+                return False
+            
+            self.log_message("INFO", "scraper", f"Navigating to: {platform_link}")
+            await self.page.click(f"text={platform_link}", timeout=30000)
             await self.page.wait_for_load_state("networkidle", timeout=30000)
             
-            # Ensure browser is still running
-            if not self.playwright:
-                self.playwright = await async_playwright().start()
-                self.browser = await self.playwright.chromium.launch(
-                    headless=True,
-                    args=[
-                        '--no-sandbox',
-                        '--disable-setuid-sandbox',
-                        '--disable-dev-shm-usage',
-                    ]
-                )
-                self.context = await self.browser.new_context()
-                self.page = await self.context.new_page()
+            # Fill the "Enter keyword" input
+            keyword_input = self.page.locator('input[placeholder="Enter keyword"]')
+            await keyword_input.fill(job.keyword)
+            
+            # Fill the "How many results?" input with a number > 0
+            results_input = self.page.locator('input[placeholder="How many results?"]')
+            await results_input.fill("10")
+            
+            # Click the "Search" button
+            search_button = self.page.locator('button:has-text("Search")')
+            await search_button.click()
+            
+            self.log_message("INFO", "scraper", f"Job submitted: {job.id}")
             
             # Wait for results
             max_wait = 120  # 120 seconds
@@ -228,6 +236,15 @@ class SocLeadsScraper:
             self.browser = None
             self.context = None
             self.page = None
+    
+    async def _get_platform_link_text(self, platform: Platform) -> str:
+        """Get the sidebar link text for a platform."""
+        platform_links = {
+            Platform.IG_KEYWORD: "Scrape Instagram Keyword",
+            Platform.FB_KEYWORD: "Scrape Facebook",
+            Platform.TIKTOK_KEYWORD: "Scrape TikTok keyword",
+        }
+        return platform_links.get(platform)
     
     async def _check_job_status(self, job: ScrapeJob) -> ScrapeStatus:
         """Check the status of a job by polling."""
