@@ -53,11 +53,7 @@ class SocLeadsScraper:
                 self.playwright = await async_playwright().start()
                 self.browser = await self.playwright.chromium.launch(
                     headless=True,
-                    args=[
-                        '--no-sandbox',
-                        '--disable-setuid-sandbox',
-                        '--disable-dev-shm-usage',
-                    ]
+                    args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
                 )
                 self.context = await self.browser.new_context()
                 self.page = await self.context.new_page()
@@ -126,8 +122,12 @@ class SocLeadsScraper:
                                 self.log_message("ERROR", "scraper", "Max login attempts reached")
                                 return False
                 finally:
-                    if self.browser:
-                        await self.browser.stop()
+                    if self.playwright:
+                        await self.playwright.stop()
+                        self.playwright = None
+                        self.browser = None
+                        self.context = None
+                        self.page = None
                 
                 return True
                 
@@ -219,14 +219,6 @@ class SocLeadsScraper:
         
         # Stop traffic capture
         await self._stop_traffic_capture()
-        
-        # Cleanup browser
-        if self.playwright:
-            await self.playwright.stop()
-            self.playwright = None
-            self.browser = None
-            self.context = None
-            self.page = None
         
         # Keep browser alive for subsequent jobs
         if self.running:
