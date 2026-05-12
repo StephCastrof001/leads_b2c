@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from playwright.async_api import async_playwright, BrowserContext, Page, PlaywrightTimeoutError
+from playwright.async_api import async_playwright, BrowserContext, Page, Playwright, PlaywrightTimeoutError
 
 from dotenv import load_dotenv
 from models import Lead, ScrapeJob, ScrapeResult, Platform, ScrapeStatus
@@ -27,6 +27,7 @@ class SocLeadsScraper:
         self.context: Optional[BrowserContext] = None
         self.page: Optional[Page] = None
         self.browser: Optional[async_playwright] = None
+        self.playwright: Optional[Playwright] = None
         self.jobs: List[ScrapeJob] = []
         self.total_credits_used = 0
         self.running = False
@@ -43,9 +44,9 @@ class SocLeadsScraper:
         """Login to SocLeads with up to 3 retry attempts."""
         self.log_message("INFO", "scraper", "Starting login...")
         
-        if not self.browser:
-            self.browser = await async_playwright().start()
-            self.context = await self.browser.chromium.launch(
+        if not self.playwright:
+            self.playwright = await async_playwright().start()
+            self.browser = await self.playwright.chromium.launch(
                 headless=True,
                 args=[
                     '--no-sandbox',
@@ -53,7 +54,7 @@ class SocLeadsScraper:
                     '--disable-dev-shm-usage',
                 ]
             )
-            self.context = await self.browser.chromium.new_context()
+            self.context = await self.browser.new_context()
             self.page = await self.context.new_page()
             
             try:
@@ -153,9 +154,9 @@ class SocLeadsScraper:
             await self.page.wait_for_load_state("networkidle", timeout=30000)
             
             # Ensure browser is still running
-            if not self.browser:
-                self.browser = await async_playwright().start()
-                self.context = await self.browser.chromium.launch(
+            if not self.playwright:
+                self.playwright = await async_playwright().start()
+                self.browser = await self.playwright.chromium.launch(
                     headless=True,
                     args=[
                         '--no-sandbox',
@@ -163,7 +164,7 @@ class SocLeadsScraper:
                         '--disable-dev-shm-usage',
                     ]
                 )
-                self.context = await self.browser.chromium.new_context()
+                self.context = await self.browser.new_context()
                 self.page = await self.context.new_page()
             
             # Wait for results
