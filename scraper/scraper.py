@@ -121,13 +121,8 @@ class SocLeadsScraper:
                             else:
                                 self.log_message("ERROR", "scraper", "Max login attempts reached")
                                 return False
-                finally:
-                    if self.playwright:
-                        await self.playwright.stop()
-                        self.playwright = None
-                        self.browser = None
-                        self.context = None
-                        self.page = None
+                except Exception:
+                    pass
                 
                 return True
                 
@@ -482,7 +477,7 @@ class SocLeadsScraper:
         """Check the status of a job by polling."""
         try:
             # Look for status indicators on the page
-            status_text = await self.page.wait_for_timeout(1000)
+            await self.page.wait_for_timeout(1000)
             
             # Check for common status indicators
             status_elements = await self.page.query_selector_all(
