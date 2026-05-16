@@ -91,7 +91,7 @@ class SocLeadsScraper:
                             await password_input.fill(SOCLEADS_PASSWORD)
                             
                             # Find and click login button
-                            login_button = self.page.locator('button[type="submit"], button:has-text("Login"), button:has-text("Ingresar")')
+                            login_button = self.page.locator('button:has-text("Log in")')
                             await login_button.click()
                             
                             # Wait for successful login
