@@ -173,7 +173,7 @@ class SocLeadsScraper:
             
             self.log_message("INFO", "scraper", f"Navigating to: {platform_link}")
             await self.page.click(f"text={platform_link}", timeout=30000)
-            await self.page.wait_for_load_state("networkidle", timeout=30000)
+            await self.page.wait_for_timeout(2000)
             
             # Fill the "Enter keyword" input
             keyword_input = self.page.locator('input[placeholder="Enter keyword"]')
@@ -248,9 +248,9 @@ class SocLeadsScraper:
             self.log_message("ERROR", "scraper", f"Unknown platform: {job.platform}")
             return False
         
-        self.log_message("INFO", "scraper", f"Navigating to: {platform_link}")
-        await self.page.click(f"text={platform_link}", timeout=30000)
-        await self.page.wait_for_load_state("networkidle", timeout=30000)
+        self.log_message("INFO", "scraper", "Navigating to: Scraping results")
+        await self.page.click("text=Scraping results", timeout=30000)
+        await self.page.wait_for_timeout(2000)
         
         # Poll the table every 10 seconds
         max_wait = 300  # 300 seconds
