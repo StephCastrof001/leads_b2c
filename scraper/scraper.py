@@ -76,11 +76,11 @@ class SocLeadsScraper:
                             await self.page.goto(SOCLEADS_BASE_URL, timeout=30000)
                             
                             # Wait for login form
-                            await self.page.wait_for_selector('input[type="email"]', timeout=5000)
+                            await self.page.wait_for_selector('input[placeholder="Email"]', timeout=15000)
                             
                             # Fill credentials
-                            email_input = self.page.locator('input[type="email"]')
-                            password_input = self.page.locator('input[type="password"]')
+                            email_input = self.page.locator('input[placeholder="Email"]')
+                            password_input = self.page.locator('input[placeholder="Password"]')
                             
                             await email_input.fill(SOCLEADS_EMAIL)
                             await password_input.fill(SOCLEADS_PASSWORD)
