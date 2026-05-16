@@ -99,8 +99,8 @@ class SocLeadsScraper:
                             
                             # Check if logged in
                             is_logged_in = await self.page.wait_for_selector(
-                                'div:has-text("Dashboard"), div:has-text("Scraper"), div:has-text("History")',
-                                timeout=5000
+                                'div:has-text("Scraping results"), div:has-text("Scrape Google Maps")',
+                                timeout=10000
                             )
                             
                             if is_logged_in:
