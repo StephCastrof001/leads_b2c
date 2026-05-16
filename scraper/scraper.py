@@ -53,10 +53,14 @@ class SocLeadsScraper:
                 self.playwright = await async_playwright().start()
                 self.browser = await self.playwright.chromium.launch(
                     headless=True,
-                    args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+                    args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
+                          '--disable-blink-features=AutomationControlled']
                 )
-                self.context = await self.browser.new_context()
+                self.context = await self.browser.new_context(
+                    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+                )
                 self.page = await self.context.new_page()
+                await self.page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
                 
                 try:
                     attempt_count = 0
@@ -73,7 +77,8 @@ class SocLeadsScraper:
                         self.log_message("INFO", "scraper", f"Login attempt {attempt_count} of {max_attempts}")
                         
                         try:
-                            await self.page.goto(SOCLEADS_BASE_URL, timeout=30000)
+                            await self.page.goto(SOCLEADS_BASE_URL, timeout=30000, wait_until='domcontentloaded')
+                            await self.page.wait_for_timeout(8000)
                             
                             # Wait for login form
                             await self.page.wait_for_selector('input[placeholder="Email"]', timeout=15000)
