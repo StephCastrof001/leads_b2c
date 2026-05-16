@@ -163,6 +163,12 @@ class SocLeadsScraper:
             # Start traffic capture
             await self._start_traffic_capture(job.id)
             
+            # Dismiss tutorial modal if present (blocks sidebar clicks)
+            modal_close = self.page.locator('.modalClose')
+            if await modal_close.count() > 0:
+                await modal_close.click()
+                await self.page.wait_for_timeout(500)
+
             # Navigate to the correct platform using sidebar link text
             platform_link = await self._get_platform_link_text(job.platform)
             if not platform_link:
