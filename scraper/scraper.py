@@ -217,7 +217,7 @@ class SocLeadsScraper:
         
         # Keep browser alive for subsequent jobs
         if self.running:
-            return
+            return True
     
     async def _get_platform_link_text(self, platform: Platform) -> str:
         """Get the sidebar link text for a platform."""
@@ -417,7 +417,7 @@ class SocLeadsScraper:
                 # Find matching request
                 request_data = None
                 for data in self.traffic_data:
-                    if data["type"] == "request" and data["url"] == response.url():
+                    if data["type"] == "request" and data["url"] == response.url:
                         request_data = data
                         break
                 
