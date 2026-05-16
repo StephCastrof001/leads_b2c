@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from playwright.async_api import async_playwright, BrowserContext, Page, Playwright, PlaywrightTimeoutError
+from playwright.async_api import async_playwright, BrowserContext, Page, Playwright, TimeoutError as PlaywrightTimeoutError
 
 from dotenv import load_dotenv
 from models import Lead, ScrapeJob, ScrapeResult, Platform, ScrapeStatus
