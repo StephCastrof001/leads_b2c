@@ -164,7 +164,7 @@ class SocLeadsScraper:
             await self._start_traffic_capture(job.id)
             
             # Navigate to the correct platform using sidebar link text
-            platform_link = self._get_platform_link_text(job.platform)
+            platform_link = await self._get_platform_link_text(job.platform)
             if not platform_link:
                 job.status = ScrapeStatus.FAILED
                 job.error = "Unknown platform"
@@ -243,7 +243,7 @@ class SocLeadsScraper:
         self.log_message("INFO", "scraper", f"Waiting for job completion: {job.id}")
         
         # Navigate to "Scraping results" via sidebar link
-        platform_link = self._get_platform_link_text(job.platform)
+        platform_link = await self._get_platform_link_text(job.platform)
         if not platform_link:
             self.log_message("ERROR", "scraper", f"Unknown platform: {job.platform}")
             return False
@@ -428,7 +428,7 @@ class SocLeadsScraper:
                 
                 if request_data:
                     # Capture response
-                    request_data["status"] = response.status()
+                    request_data["status"] = response.status
                     request_data["body"] = await response.text()
                     
                     # Ensure JSON body is properly formatted
@@ -445,8 +445,8 @@ class SocLeadsScraper:
         
         # Attach listeners
         try:
-            await self.page.on("request", handle_request)
-            await self.page.on("response", handle_response)
+            self.page.on("request", handle_request)
+            self.page.on("response", handle_response)
             self.log_message("INFO", "scraper", f"Traffic capture started for job: {job_id}")
         except Exception as e:
             self.log_message("ERROR", "scraper", f"Failed to attach traffic listeners: {e}")
@@ -461,8 +461,8 @@ class SocLeadsScraper:
         
         try:
             # Remove listeners
-            await self.page.off("request", lambda r: None)
-            await self.page.off("response", lambda r: None)
+            self.page.off("request", lambda r: None)
+            self.page.off("response", lambda r: None)
             
             # Save to file
             output_path = f"/tmp/socleads_traffic_{self.traffic_job_id}.json"
