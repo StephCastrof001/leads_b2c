@@ -1,42 +1,24 @@
 import asyncio
-import sys
 import os
+import sys
 
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+from scraper.models import Platform, ScrapeJob
 from scraper.scraper import SocLeadsScraper
 
-class MockPlatform:
-    def __init__(self, val):
-        self.value = val
-
-
 async def main():
-    print('🚀 Iniciando Scraper de Producción...')
+    print("🚀 Iniciando Scraper de Produccion...")
     scraper = SocLeadsScraper()
-    
+    job = ScrapeJob(id="test_001", keyword="Marketing Agencies", platform=Platform.IG_KEYWORD)
     try:
-        # 1. Hacer Login
-        success = await scraper.login()
-        if not success:
-            print('❌ FALLÓ el login. Abortando extracción.')
-            return
-            
-        print('✅ LOGIN EXITOSO. Iniciando búsqueda de leads...')
-        
-        # 2. Crear y correr el Job
-        job = await scraper.create_job(MockPlatform("instagram"), 'Marketing Agencies')
-        job_success = await scraper.run_scrape_job(job)
-        
-        if job_success:
-            print(f'✅ ¡JOB COMPLETADO! Revisa los resultados para el job: {job.id}')
+        results = await scraper.run_scrape_job(job)
+        if results:
+            print(f"✄ EXTRACCION FINALIZADA: {len(results.leads)} leads encontrados.")
         else:
-            print('❌ FALLÓ el job de extracción.')
-            
+            print("❌ FALLÓ el job de extracción.")
     except Exception as e:
-        print(f'💥 ERROR CRÍTICO: {e}')
+        print(f"💨 ERROR CRÍTICO: {e}")
     finally:
-        if scraper.playwright:
-            await scraper.playwright.stop()
-            print('🧹 Limpieza completada.')
+        print("🙹🏼 Limpieza completada.")
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
