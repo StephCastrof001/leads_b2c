@@ -124,7 +124,7 @@ async def main():
     print("[INFO] Starting SocLeads API Recon Capture...")
     print(f"[INFO] Base URL: {SOCLEADS_BASE_URL}")
     print(f"[INFO] Email: {SOCLEADS_EMAIL}")
-    print(f"[INFO] Password: {SOCLEADS_PASSWORD}")
+    print("[INFO] Password: [REDACTED]")
 
     async with async_playwright.async_playwright() as p:
         # Launch browser with stealth settings
