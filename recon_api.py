@@ -121,7 +121,7 @@ async def run_scrape_job(page):
 
 async def main():
     """Main function to run the API recon capture."""
-    print(f"[INFO] Starting SocLeads API Recon Capture...")
+    print("[INFO] Starting SocLeads API Recon Capture...")
     print(f"[INFO] Base URL: {SOCLEADS_BASE_URL}")
     print(f"[INFO] Email: {SOCLEADS_EMAIL}")
     print(f"[INFO] Password: {SOCLEADS_PASSWORD}")
