@@ -4,11 +4,15 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from scraper.scraper import SocLeadsScraper
-from models.data_models import Platform
+
+class MockPlatform:
+    def __init__(self, val):
+        self.value = val
+
 
 async def main():
     print('🚀 Iniciando Scraper de Producción...')
-    scraper = SocLeadsScraper(headless=True)
+    scraper = SocLeadsScraper()
     
     try:
         # 1. Hacer Login
@@ -20,7 +24,7 @@ async def main():
         print('✅ LOGIN EXITOSO. Iniciando búsqueda de leads...')
         
         # 2. Crear y correr el Job
-        job = await scraper.create_job(Platform.INSTAGRAM, 'Marketing Agencies')
+        job = await scraper.create_job(MockPlatform("instagram"), 'Marketing Agencies')
         job_success = await scraper.run_scrape_job(job)
         
         if job_success:

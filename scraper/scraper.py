@@ -7,12 +7,16 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from playwright.async_api import async_playwright, BrowserContext, Page, Playwright, TimeoutError as PlaywrightTimeoutError
+from supabase import create_client, Client
 
 from dotenv import load_dotenv
-from models import Lead, ScrapeJob, ScrapeResult, Platform, ScrapeStatus
+from scraper.models import Lead, ScrapeJob, ScrapeResult, Platform, ScrapeStatus
 
 # Load environment variables
 load_dotenv()
+
+# Supabase client
+supabase_client: Optional[Client] = None
 
 # Configuration
 SOCLEADS_BASE_URL = os.getenv("SOCLEADS_BASE_URL", "https://app.socleads.com")
@@ -35,6 +39,7 @@ class SocLeadsScraper:
         self.running = False
         self.traffic_data: List[Dict[str, Any]] = []
         self.traffic_job_id: Optional[str] = None
+        self.supabase: Optional[Client] = None
         
     def log_message(self, level: str, module: str, message: str):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -43,6 +48,28 @@ class SocLeadsScraper:
     async def setup_directories(self):
         """Create required directories if they don't exist."""
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    
+    async def setup_supabase(self) -> bool:
+        """Initialize Supabase client."""
+        self.log_message("INFO", "scraper", "Setting up Supabase connection...")
+        
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+            
+            supabase_url = os.getenv("SUPABASE_URL")
+            supabase_key = os.getenv("SUPABASE_KEY")
+            
+            if not supabase_url or not supabase_key:
+                self.log_message("WARN", "scraper", "Missing Supabase credentials in .env")
+                return False
+            
+            self.supabase = create_client(supabase_url, supabase_key)
+            self.log_message("INFO", "scraper", "Supabase connection established")
+            return True
+        except Exception as e:
+            self.log_message("ERROR", "scraper", f"Supabase setup error: {e}")
+            return False
     
     async def login(self) -> bool:
         """Login to SocLeads with up to 3 retry attempts."""
@@ -192,7 +219,13 @@ class SocLeadsScraper:
             # Click the "Search" button
             search_button = self.page.locator('button:has-text("Search")')
             await search_button.click()
-            
+
+            # Dismiss "Searching..." confirmation modal
+            ok_button = self.page.locator('button:has-text("OK")')
+            if await ok_button.count() > 0:
+                await ok_button.wait_for(timeout=10000)
+                await ok_button.click()
+
             self.log_message("INFO", "scraper", f"Job submitted: {job.id}")
             
             # Wait for results
@@ -282,29 +315,22 @@ class SocLeadsScraper:
     async def _check_job_row_status(self, job: ScrapeJob) -> ScrapeStatus:
         """Check the status of a specific job row in the table."""
         try:
-            # Search for the keyword in the table
-            keyword_selector = f"tr:has-text('{job.keyword}')"
+            # Tabulator.js renders rows as div.tabulator-row (not <tr>)
+            keyword_selector = f".tabulator-row:has-text('{job.keyword}')"
             rows = await self.page.query_selector_all(keyword_selector)
-            
+
             if not rows:
                 self.log_message("WARN", "scraper", f"Keyword not found in table: {job.keyword}")
                 return ScrapeStatus.RUNNING
-            
-            # Check the status column for this row
+
+            # Status values in SocLeads: Ready, Running, Failed/Error
             for row in rows:
-                # Get all cells in the row
-                cells = await row.query_selector_all("td, th")
-                if len(cells) >= 5:
-                    # Check the Status column (typically 5th column)
-                    status_cell = await cells[4].text_content()
-                    
-                    if "Completed" in status_cell:
-                        return ScrapeStatus.COMPLETED
-                    elif "Failed" in status_cell:
-                        return ScrapeStatus.FAILED
-                    elif "Running" in status_cell:
-                        return ScrapeStatus.RUNNING
-            
+                text = await row.text_content()
+                if "Ready" in text:
+                    return ScrapeStatus.COMPLETED
+                elif "Failed" in text or "Error" in text:
+                    return ScrapeStatus.FAILED
+
             return ScrapeStatus.RUNNING
             
         except PlaywrightTimeoutError:
@@ -346,6 +372,10 @@ class SocLeadsScraper:
             if leads:
                 job.leads = leads
                 job.credits_used = len(job.leads)
+                
+                # Upsert leads to Supabase
+                await self.upsert_leads_to_supabase(leads, job)
+                
                 self.log_message("INFO", "scraper", f"Downloaded {len(leads)} leads for job: {job.id}")
                 return True
             else:
@@ -395,6 +425,39 @@ class SocLeadsScraper:
         except Exception as e:
             self.log_message("ERROR", "scraper", f"CSV parse error: {e}")
             return leads
+    
+    async def upsert_leads_to_supabase(self, leads: List[Lead], job: ScrapeJob) -> bool:
+        """Upsert leads into Supabase socleads_data table."""
+        if not self.supabase:
+            self.log_message("WARN", "scraper", "Supabase not initialized, skipping upsert")
+            return False
+        
+        try:
+            self.log_message("INFO", "scraper", f"Upserting {len(leads)} leads to Supabase for job: {job.id}")
+            
+            # Prepare data for upsert
+            data = []
+            for lead in leads:
+                data.append({
+                    "platform": lead.platform.value,
+                    "keyword": lead.keyword,
+                    "email": lead.email,
+                    "name": lead.name,
+                    "link": lead.link,
+                    "phone": lead.phone,
+                    "job_id": job.id,
+                    "created_at": datetime.now().isoformat()
+                })
+            
+            # Upsert into Supabase
+            self.supabase.table("socleads_data").upsert(data).execute()
+            
+            self.log_message("INFO", "scraper", f"Upserted {len(data)} leads to Supabase")
+            return True
+            
+        except Exception as e:
+            self.log_message("ERROR", "scraper", f"Supabase upsert error: {e}")
+            return False
     
     async def _start_traffic_capture(self, job_id: str) -> None:
         """Start capturing network traffic for a specific job."""
@@ -525,6 +588,10 @@ class SocLeadsScraper:
         # Setup
         await self.setup_directories()
         
+        # Setup Supabase
+        if not await self.setup_supabase():
+            self.log_message("WARN", "scraper", "Supabase setup failed, continuing without cloud storage")
+        
         # Login
         if not await self.login():
             self.log_message("WARN", "scraper", "Login failed, trying again...")
@@ -569,6 +636,10 @@ class SocLeadsScraper:
             self.browser = None
             self.context = None
             self.page = None
+        
+        # Cleanup Supabase
+        if self.supabase:
+            self.log_message("INFO", "scraper", "Supabase connection closed")
         
         self.log_message("INFO", "scraper", "=== All jobs completed ===")
         
