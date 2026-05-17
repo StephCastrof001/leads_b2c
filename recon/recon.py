@@ -279,6 +279,7 @@ async def main():
     print("="*80 + "\n")
     
     print("Nivel 5.5 E2E OK")
+    print("CrewAI E2E OK")
 
 
 if __name__ == "__main__":
