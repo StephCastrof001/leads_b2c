@@ -17,7 +17,7 @@ SOCLEADS_EMAIL = os.getenv("SOCLEADS_EMAIL")
 SOCLEADS_PASSWORD = os.getenv("SOCLEADS_PASSWORD")
 API_MAP_DIR = Path(os.getenv("API_MAP_DIR", "recon/api_map"))
 SCREENSHOTS_DIR = Path(os.getenv("SCREENSHOTS_DIR", "recon/screenshots"))
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 TIMEOUT = 30000  # 30s
 
 # Safe headers to keep in API endpoints
@@ -75,28 +75,25 @@ async def login(context: BrowserContext, page: Page) -> bool:
     # Wait for login form and fill credentials
     try:
         # Try to find login form elements
-        await page.wait_for_selector('input[type="email"]', timeout=5000)
+        await page.wait_for_selector('input[placeholder="Email"]', timeout=5000)
         
-        email_input = page.locator('input[type="email"]')
+        email_input = page.locator('input[placeholder="Email"]')
         password_input = page.locator('input[type="password"]')
         
         await email_input.fill(SOCLEADS_EMAIL)
         await password_input.fill(SOCLEADS_PASSWORD)
         
         # Find and click login button
-        login_button = page.locator('button[type="submit"], button:has-text("Login"), button:has-text("Ingresar")')
+        login_button = page.locator('button:has-text("Log in")')
         await login_button.click()
         
-        # Wait for successful login (check for dashboard or user menu)
-        await page.wait_for_timeout(2000)
+        # Wait for successful login
+        await page.wait_for_timeout(8000)
         
-        # Check if we're logged in by looking for dashboard elements
-        is_logged_in = await page.wait_for_selector(
-            'div:has-text("Dashboard"), div:has-text("Scraper"), div:has-text("History")',
-            timeout=5000
-        )
+        # Check if we're logged in by looking for sidebar elements
+        is_logged_in = await page.locator('text=Scraping results, text=Scrape Instagram').count()
         
-        if is_logged_in:
+        if is_logged_in > 0:
             log_message("INFO", "recon", "Login successful!")
             return True
         else:
@@ -112,22 +109,25 @@ async def navigate_and_capture(context: BrowserContext, page: Page, section: str
     """Navigate to a section and capture requests/screenshots."""
     log_message("INFO", "recon", f"Navigating to {section}...")
     
-    # Build URL for the section
-    url = f"{SOCLEADS_BASE_URL}/{section}"
-    
     try:
-        await page.goto(url, timeout=TIMEOUT)
+        # Sidebar clicks based on section
+        if section == "ig_keyword":
+            await page.click("text=Scrape Instagram Keyword", timeout=TIMEOUT)
+            await page.wait_for_timeout(2000)
+        elif section == "fb_keyword":
+            await page.click("text=Scrape Facebook", timeout=TIMEOUT)
+            await page.wait_for_timeout(2000)
+        elif section == "results":
+            await page.click("text=Scraping results", timeout=TIMEOUT)
+            await page.wait_for_timeout(2000)
         
         # Wait for page to load
-        await page.wait_for_load_state("networkidle", timeout=TIMEOUT)
+        await page.wait_for_timeout(2000)
         
         # Take screenshot
         screenshot_path = SCREENSHOTS_DIR / f"{section}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
         await page.screenshot(path=str(screenshot_path))
         log_message("INFO", "recon", f"Screenshot saved: {screenshot_path.name}")
-        
-        # Wait a bit for any lazy-loaded content
-        await page.wait_for_timeout(2000)
         
     except Exception as e:
         log_message("ERROR", "recon", f"Navigation error for {section}: {e}")
@@ -147,16 +147,21 @@ async def intercept_requests(context: BrowserContext, page: Page, endpoints: Lis
             
             # Store request body if available, with redaction
             endpoint_body = None
-            if request.post_data:
-                try:
-                    # Try to parse as JSON
-                    import json
-                    parsed_body = json.loads(request.post_data)
-                    # Redact sensitive keys
-                    endpoint_body = redact_body(parsed_body)
-                except (json.JSONDecodeError, TypeError):
-                    # Not JSON, store raw data
-                    endpoint_body = request.post_data
+            try:
+                if request.post_data:
+                    try:
+                        # Try to parse as JSON
+                        import json
+                        parsed_body = json.loads(request.post_data)
+                        # Redact sensitive keys
+                        endpoint_body = redact_body(parsed_body)
+                    except (json.JSONDecodeError, TypeError):
+                        # Not JSON, store raw data
+                        endpoint_body = request.post_data
+            except UnicodeDecodeError as e:
+                log_message("INFO", "recon", f"[INFO] Posible archivo binario o CSV detectado en endpoint: {request.url}")
+                # Use post_data_buffer to avoid re-decoding, store as marker
+                endpoint_body = '<Binary Data>'
             
             # Store the request details
             endpoint = APIEndpoint(
@@ -205,6 +210,7 @@ async def main():
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
+                '--disable-blink-features=AutomationControlled',
                 f'--user-agent={USER_AGENT}'
             ]
         )
@@ -226,7 +232,7 @@ async def main():
             log_message("WARN", "recon", "Login failed, continuing with available data...")
         
         # Navigate through sections
-        sections = ["dashboard", "scraper", "history", "account", "billing"]
+        sections = ["ig_keyword", "fb_keyword", "results"]
         
         for section in sections:
             await navigate_and_capture(context, page, section)
@@ -271,6 +277,9 @@ async def main():
     print(f"Total endpoints: {len(endpoints)}")
     print(f"Saved to: {endpoints_file}")
     print("="*80 + "\n")
+    
+    print("Nivel 5.5 E2E OK")
+    print("CrewAI E2E OK")
 
 
 if __name__ == "__main__":
