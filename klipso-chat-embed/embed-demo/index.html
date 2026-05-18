@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klipso Chat Embed Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .demo-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .widget-container {
+            min-height: 400px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Klipso Chat Embed Demo</h1>
+    
+    <div class="demo-info">
+        <h2>Información de la Demo</h2>
+        <p>Esta página carga el widget de chat de AnythingLLM desde <code>localhost:3001</code>.</p>
+        <p><strong>Estado del API:</strong> <span id="api-status">Cargando...</span></p>
+        <p><strong>Widget:</strong> <span id="widget-status">Cargando...</span></p>
+    </div>
+
+    <div class="widget-container">
+        <!-- AnythingLLM Embed Widget -->
+        <script src="http://localhost:3001/embed.js"></script>
+    </div>
+
+    <script>
+        // Check API status
+        fetch('http://localhost:3001/api/ping')
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('api-status').textContent = 'Online ✓';
+                    document.getElementById('api-status').style.color = 'green';
+                } else {
+                    document.getElementById('api-status').textContent = 'Offline ✗';
+                    document.getElementById('api-status').style.color = 'red';
+                }
+            })
+            .catch(error => {
+                document.getElementById('api-status').textContent = 'Error ✗';
+                document.getElementById('api-status').style.color = 'red';
+                console.error('API Ping Error:', error);
+            });
+
+        // Check widget status
+        const widgetScript = document.querySelector('script[src*="embed.js"]');
+        if (widgetScript) {
+            document.getElementById('widget-status').textContent = 'Cargando...';
+            widgetScript.addEventListener('load', () => {
+                document.getElementById('widget-status').textContent = 'Cargado ✓';
+                document.getElementById('widget-status').style.color = 'green';
+            });
+            widgetScript.addEventListener('error', () => {
+                document.getElementById('widget-status').textContent = 'Error ✗';
+                document.getElementById('widget-status').style.color = 'red';
+            });
+        }
+    </script>
+</body>
+</html>
