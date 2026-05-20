@@ -2,19 +2,20 @@ import asyncio
 import json
 import os
 from datetime import datetime
+from typing import Any, Dict, List
 from dotenv import load_dotenv
 
-import async_playwright
+from playwright.async_api import async_playwright
 
 # Load environment variables
 load_dotenv()
 
 SOCLEADS_EMAIL = os.getenv("SOCLEADS_EMAIL")
 SOCLEADS_PASSWORD = os.getenv("SOCLEADS_PASSWORD")
-SOCLEADS_BASE_URL = os.getenv("SOCLEADS_BASE_URL", "https://socleads.com")
+SOCLEADS_BASE_URL = os.getenv("SOCLEADS_BASE_URL", "https://app.socleads.com")
 
 # Storage for captured requests
-captured_requests = []
+captured_requests: List[Dict[str, Any]] = []
 
 # Stealth configuration
 STEALTH_ARGS = [
@@ -83,9 +84,9 @@ async def route_handler(route, request):
 async def login(page):
     """Login to SocLeads using email and password."""
     # Find and fill login form
-    email_input = page.locator('input[type="email"]')
-    password_input = page.locator('input[type="password"]')
-    login_button = page.locator('button[type="submit"]')
+    email_input = page.locator('input[placeholder="Email"]')
+    password_input = page.locator('input[placeholder="Password"]')
+    login_button = page.locator('button:has-text("Log in")')
 
     await email_input.fill(SOCLEADS_EMAIL)
     await password_input.fill(SOCLEADS_PASSWORD)
@@ -98,21 +99,21 @@ async def login(page):
 async def run_scrape_job(page):
     """Navigate to Scrape Instagram Keyword and run a test job."""
     # Navigate to the keyword scrape page
-    await page.goto(SOCLEADS_BASE_URL + "/scrape/instagram/keyword")
+    await page.goto(SOCLEADS_BASE_URL + "/scrape/instagram/keyword", timeout=30000)
     
     # Wait for page to load
     await asyncio.sleep(1)
 
     # Fill in the keyword
-    keyword_input = page.locator('input[name="keyword"]')
+    keyword_input = page.locator('input[placeholder="Enter keyword"]')
     await keyword_input.fill("Marketing")
 
     # Fill in the results count
-    results_input = page.locator('input[name="results"]')
+    results_input = page.locator('input[placeholder="How many results?"]')
     await results_input.fill("10")
 
     # Click Search
-    search_button = page.locator('button[type="submit"]')
+    search_button = page.locator('button:has-text("Search")')
     await search_button.click()
 
     # Wait for job to complete (15 seconds)
@@ -126,7 +127,7 @@ async def main():
     print(f"[INFO] Email: {SOCLEADS_EMAIL}")
     print("[INFO] Password: [REDACTED]")
 
-    async with async_playwright.async_playwright() as p:
+    async with async_playwright() as p:
         # Launch browser with stealth settings
         browser = await p.chromium.launch(
             args=STEALTH_ARGS,
@@ -143,7 +144,7 @@ async def main():
         print("[INFO] Browser launched successfully")
 
         # Navigate to base URL
-        await page.goto(SOCLEADS_BASE_URL)
+        await page.goto(SOCLEADS_BASE_URL, timeout=30000)
         print("[INFO] Navigated to base URL")
 
         # Set up route interception
@@ -166,24 +167,22 @@ async def main():
         print("[INFO] Route interception disabled")
 
         # Save captured requests to file
-        output_path = "/tmp/socleads_api_recon.json"
-        with open(output_path, 'w') as f:
-            json.dump(captured_requests, f, indent=2)
-        print(f"[INFO] Captured requests saved to: {output_path}")
+        output_path = os.path.join(os.path.dirname(__file__), "traffic", "recon_api_capture.json")
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(captured_requests, f, indent=2, default=str)
+
+        print(f"[INFO] Captured {len(captured_requests)} requests")
+        print(f"[INFO] Results saved to: {output_path}")
 
         # Print summary
-        total_requests = len(captured_requests)
-        unique_urls = set(req['url'] for req in captured_requests)
-
-        print("\n" + "=" * 60)
-        print("RECON API CAPTURE SUMMARY")
-        print("=" * 60)
-        print(f"Total requests captured: {total_requests}")
-        print(f"Unique URLs: {len(unique_urls)}")
-        print("\nUnique URLs captured:")
-        for url in sorted(unique_urls):
-            print(f"  - {url}")
-        print("=" * 60)
+        print("\n" + "="*80)
+        print("API RECON SUMMARY")
+        print("="*80)
+        print(f"Total Requests: {len(captured_requests)}")
+        print(f"Output File: {output_path}")
+        print("="*80)
 
         # Close browser
         await browser.close()
