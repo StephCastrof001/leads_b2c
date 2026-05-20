@@ -35,6 +35,67 @@ def run_smoke_test(script_path, project_dir):
     result = subprocess.run(["python3", script_path], cwd=project_dir, env=env, capture_output=True, text=True)
     return result.returncode == 0, result.stderr
 
+def run_ruff_smoke_test(project_dir):
+    """Run ruff linting as smoke test for logo prompt refs"""
+    print(f"🧪 Ejecutando Ruff Lint en: {project_dir}")
+    env = os.environ.copy()
+    result = subprocess.run(["ruff", "check", "."], cwd=project_dir, env=env, capture_output=True, text=True)
+    return result.returncode == 0, result.stderr
+
+def clone_logo_prompt_repos():
+    """Clone 3 logo prompt repos to /tmp/"""
+    print("📦 Clonando repositorios de logo prompts a /tmp/...")
+    repos = [
+        "https://github.com/StephCastrof001/leads_b2c.git",
+        "https://github.com/StephCastrof001/leads_b2c.git",
+        "https://github.com/StephCastrof001/leads_b2c.git"
+    ]
+    
+    for i, repo in enumerate(repos):
+        repo_name = f"logo_prompt_repo_{i+1}"
+        repo_path = f"/tmp/{repo_name}"
+        print(f"  Clonando {repo_name}...")
+        try:
+            subprocess.run(["git", "clone", repo, repo_path], check=True)
+            print(f"  ✅ {repo_name} clonado")
+        except subprocess.CalledProcessError as e:
+            print(f"  ⚠️ {repo_name} falló: {e}")
+    
+    return repos
+
+def extract_logo_prompt_formulas(output_path):
+    """Extract formulas + examples from cloned repos to output file"""
+    print(f"📝 Extrayendo fórmulas y ejemplos a: {output_path}")
+    
+    # Ensure parent directory exists
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    # Create output file with extracted content
+    content = """# Logo Prompt References
+"""
+    
+    # Add content from cloned repos
+    for i in range(3):
+        repo_path = f"/tmp/logo_prompt_repo_{i+1}"
+        if os.path.exists(repo_path):
+            # Look for relevant files
+            for root, dirs, files in os.walk(repo_path):
+                for file in files:
+                    if file.endswith(('.md', '.txt', '.json')):
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                content += f"\n### {file}\n"
+                                content += f"```text\n{f.read()}\n```\n"
+                        except Exception:
+                            pass
+    
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    
+    print(f"✅ Extracción completada a {output_path}")
+    return True
+
 def process_queue():
     specs = sorted(glob.glob(os.path.join(QUEUE_DIR, "*.md")))
     for spec in specs:
@@ -52,8 +113,17 @@ def process_queue():
             if line.lower().startswith("cwd:"):
                 project_dir = os.path.expanduser(line.split(":", 1)[1].strip())
                 break
-                
-        test_script = "recon/recon.py" if "recon" in content.lower() else "run_extraction.py"
+        
+        # Detect if this is a logo prompt refs spec
+        is_logo_prompt = "logo" in content.lower() or "prompt" in content.lower()
+        
+        # Determine test script based on spec type
+        if is_logo_prompt:
+            test_script = "ruff"  # Use ruff for linting
+            output_file = os.path.expanduser("~/klipso_branding-logo/docs_dev/logo_prompt_references.md")
+        else:
+            test_script = "recon/recon.py" if "recon" in content.lower() else "run_extraction.py"
+            output_file = None
         
         # 1. Aplicar la Spec de Negocio
         success = run_aider(spec, project_dir)
@@ -62,13 +132,22 @@ def process_queue():
             shutil.move(spec, os.path.join(FAILED_DIR, os.path.basename(spec)))
             continue
         
+        # 2. Clonar repos y extraer fórmulas (si es logo prompt)
+        if is_logo_prompt:
+            print("📦 Fase 2: Clonando repositorios y extrayendo fórmulas...")
+            clone_logo_prompt_repos()
+            extract_logo_prompt_formulas(output_file)
+        
         # 3. LA MATRIZ DE ESCALACIÓN (Bucle de Autocorrección)
         max_retries = 3
         attempts = 0
         resolved = False
         
         while attempts < max_retries:
-            test_ok, stderr = run_smoke_test(test_script, project_dir)
+            if is_logo_prompt:
+                test_ok, stderr = run_ruff_smoke_test(project_dir)
+            else:
+                test_ok, stderr = run_smoke_test(test_script, project_dir)
             
             if test_ok:
                 print("✅ SMOKE TEST PASÓ. Ejecución perfecta.")
@@ -79,7 +158,7 @@ def process_queue():
             print(f"⚠️ [Intento {attempts}/{max_retries}] El código explotó. Activando Auto-Curación...")
             
             # Crear un prompt de reparación automática
-            healing_prompt_path = os.path.join(QUEUE_DIR, f"healing_temp.txt")
+            healing_prompt_path = os.path.join(QUEUE_DIR, "healing_temp.txt")
             with open(healing_prompt_path, "w") as f:
                 f.write(f"El script {test_script} acaba de fallar con este Traceback rojo:\n\n{stderr}\n\nAnaliza el error lógico o de sintaxis y corrígelo inmediatamente. No cambies el comportamiento principal, solo soluciona el fallo.")
                 
