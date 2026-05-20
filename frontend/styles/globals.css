@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-dark-950 via-dark-900 to-dark-800 text-white;
+  }
+}
+
+@layer components {
+  .prose {
+    @apply text-dark-300;
+  }
+  
+  .prose h3 {
+    @apply text-primary-300;
+  }
+  
+  .prose p {
+    @apply text-dark-300;
+  }
+}
