@@ -79,7 +79,7 @@ def process_queue():
             print(f"⚠️ [Intento {attempts}/{max_retries}] El código explotó. Activando Auto-Curación...")
             
             # Crear un prompt de reparación automática
-            healing_prompt_path = os.path.join(QUEUE_DIR, f"healing_temp.txt")
+            healing_prompt_path = os.path.join(QUEUE_DIR, "healing_temp.txt")
             with open(healing_prompt_path, "w") as f:
                 f.write(f"El script {test_script} acaba de fallar con este Traceback rojo:\n\n{stderr}\n\nAnaliza el error lógico o de sintaxis y corrígelo inmediatamente. No cambies el comportamiento principal, solo soluciona el fallo.")
                 
@@ -103,9 +103,28 @@ def process_queue():
                 f.write(f"# 🚨 EMERGENCIA: ESCALACIÓN DE NIVEL 5\nLa spec `{os.path.basename(spec)}` sobrepasó las capacidades de Ollama tras {max_retries} intentos de autocorrección.\n\n### Último error fatal:\n```python\n{stderr}\n```\n\n**Acción requerida (Nivel 6):** Claude, por favor lee este error, arregla la lógica profunda y vuelve a enviar la spec.")
             shutil.move(spec, os.path.join(FAILED_DIR, os.path.basename(spec)))
 
+def run_queue_watcher():
+    """Run the queue-watcher.sh script for recursive file monitoring"""
+    watcher_script = os.path.expanduser("~/queue-watcher.sh")
+    
+    if os.path.exists(watcher_script):
+        print("👁️  Starting queue-watcher.sh for recursive monitoring...")
+        env = os.environ.copy()
+        result = subprocess.run(["bash", watcher_script], env=env, capture_output=True, text=True)
+        return result.returncode == 0
+    else:
+        print("⚠️  queue-watcher.sh not found, falling back to periodic check...")
+        return False
+
 if __name__ == "__main__":
     print("🧠 HiveMind V2 (Nivel 5) Boot sequence completada.")
     print("📡 Escuchando transmisiones en la cola...")
-    while True:
-        process_queue()
-        time.sleep(10)
+    
+    # Try to run the watcher script first
+    if run_queue_watcher():
+        print("✅ Queue watcher started successfully.")
+    else:
+        # Fallback to periodic processing
+        while True:
+            process_queue()
+            time.sleep(10)
