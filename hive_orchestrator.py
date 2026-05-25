@@ -4,9 +4,11 @@ import time
 import subprocess
 import shutil
 
-QUEUE_DIR = os.path.expanduser("~/queue")
-DONE_DIR = os.path.expanduser("~/done")
-FAILED_DIR = os.path.expanduser("~/failed")
+# Define base directory for crew/hive system
+BASE_DIR = os.path.expanduser("~/crew/hive")
+QUEUE_DIR = os.path.join(BASE_DIR, "queue")
+DONE_DIR = os.path.join(BASE_DIR, "done")
+FAILED_DIR = os.path.join(BASE_DIR, "failed")
 PROJECT_DIR = os.path.expanduser("~/leads/socleads")
 
 # Aseguramos que los directorios existan
@@ -79,7 +81,7 @@ def process_queue():
             print(f"⚠️ [Intento {attempts}/{max_retries}] El código explotó. Activando Auto-Curación...")
             
             # Crear un prompt de reparación automática
-            healing_prompt_path = os.path.join(QUEUE_DIR, f"healing_temp.txt")
+            healing_prompt_path = os.path.join(QUEUE_DIR, "healing_temp.txt")
             with open(healing_prompt_path, "w") as f:
                 f.write(f"El script {test_script} acaba de fallar con este Traceback rojo:\n\n{stderr}\n\nAnaliza el error lógico o de sintaxis y corrígelo inmediatamente. No cambies el comportamiento principal, solo soluciona el fallo.")
                 
@@ -94,7 +96,7 @@ def process_queue():
             subprocess.run(["git", "add", "."], cwd=project_dir)
             subprocess.run(["git", "commit", "-m", commit_msg], cwd=project_dir)
             subprocess.run(["git", "push", "origin", "main"], cwd=project_dir)
-            print("☁️ Código enviado a la nube. Moviendo a ~/done/")
+            print("☁️ Código enviado a la nube. Moviendo a ~/crew/hive/done/")
             shutil.move(spec, os.path.join(DONE_DIR, os.path.basename(spec)))
         else:
             print("🚨 Límite cognitivo alcanzado. ESCALANDO AL ARQUITECTO (NIVEL 6).")
@@ -106,6 +108,9 @@ def process_queue():
 if __name__ == "__main__":
     print("🧠 HiveMind V2 (Nivel 5) Boot sequence completada.")
     print("📡 Escuchando transmisiones en la cola...")
+    print(f"📁 Queue: {QUEUE_DIR}")
+    print(f"✅ Done: {DONE_DIR}")
+    print(f"⚠️ Failed: {FAILED_DIR}")
     while True:
         process_queue()
         time.sleep(10)
